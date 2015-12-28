@@ -117,35 +117,59 @@ public class HAProxyConfigWriter {
         // Find port mappings
         Member firstMember = (Member) cluster.getMembers().toArray()[0];
         Collection<Port> ports = firstMember.getPorts();
+        int maxConnectionsPerServer = HAProxyContext.getInstance().getMaxConnectionsPerServer();
 
         for (Port port : ports) {
             // Frontend block start
             String protocol = port.getProtocol();
-            String frontendId = protocol + "_" + port.getValue() + "_frontend";
 
-            frontendCollection.append("frontend ").append(frontendId).append(NEW_LINE);
-            frontendCollection.append("\tbind ").append(HAProxyContext.getInstance().getHAProxyPrivateIp())
-                    .append(":").append(port.getProxy()).append(NEW_LINE);
-            frontendCollection.append("\tmode ").append(protocol).append(NEW_LINE);
+            if ("http".equals(protocol)) {
+                String frontendId = protocol + "_" + port.getValue() + "_frontend";
+                frontendCollection.append("frontend ").append(frontendId).append(NEW_LINE);
+                frontendCollection.append("\tbind ").append(HAProxyContext.getInstance().getHAProxyPrivateIp())
+                        .append(":").append(port.getProxy()).append(NEW_LINE);
+                frontendCollection.append("\tmode http").append(NEW_LINE);
 
-            for (String hostname : cluster.getHostNames()) {
-                String backendId = hostname + "_" + protocol + "_" + port.getValue() + "_backend";
+                for (String hostname : cluster.getHostNames()) {
+                    String backendId = hostname + "_http_" + port.getValue() + "_backend";
 
-                frontendCollection.append("\tacl ").append("is_").append(hostname).append(" hdr_beg(host) -i ")
-                        .append(hostname).append(NEW_LINE);
-                frontendCollection.append("\tuse_backend ").append(backendId).append(" if is_")
-                        .append(hostname).append(NEW_LINE);
-                // Front end block end
+                    frontendCollection.append("\tacl ").append("is_").append(hostname).append(" hdr_beg(host) -i ")
+                            .append(hostname).append(NEW_LINE);
+                    frontendCollection.append("\tuse_backend ").append(backendId).append(" if is_")
+                            .append(hostname).append(NEW_LINE);
+                    // Front end block end
 
-                // Backend block start
-                backendCollection.append("backend ").append(backendId).append(NEW_LINE);
-                backendCollection.append("\tmode ").append(protocol).append(NEW_LINE);
-                for (Member member : cluster.getMembers()) {
-                    backendCollection.append("\tserver ").append(member.getMemberId()).append(" ")
-                            .append(member.getHostName()).append(":").append(port.getValue()).append(NEW_LINE);
+                    // Backend block start
+                    backendCollection.append("backend ").append(backendId).append(NEW_LINE);
+                    backendCollection.append("\tmode http").append(NEW_LINE);
+                    backendCollection.append("\tcookie SRVNAME insert").append(NEW_LINE);
+                    for (Member member : cluster.getMembers()) {
+                        backendCollection.append("\tserver ").append(member.getMemberId()).append(" ")
+                                .append(member.getHostName()).append(":").append(port.getValue());
+                        if (maxConnectionsPerServer >= 0) {
+                            backendCollection.append(" maxconn ").append(maxConnectionsPerServer);
+                        }
+                        backendCollection.append(" cookie ").append(member.getHostName()).append(" check").append(NEW_LINE);
+                    }
+                    backendCollection.append(NEW_LINE);
+                    // Backend block end
                 }
-                backendCollection.append(NEW_LINE);
-                // Backend block end
+            } else {
+                String frontendId = protocol + "_" + port.getValue() + "_frontend";
+                frontendCollection.append("listen ").append(frontendId).append(NEW_LINE);
+                frontendCollection.append("\tbind ").append(HAProxyContext.getInstance().getHAProxyPrivateIp())
+                        .append(":").append(port.getProxy()).append(NEW_LINE);
+                frontendCollection.append("\tmode ").append(protocol).append(NEW_LINE);
+                frontendCollection.append("\tbalance roundrobin").append(NEW_LINE);
+
+                for (Member member : cluster.getMembers()) {
+                    frontendCollection.append("\tserver ").append(member.getMemberId()).append(" ")
+                            .append(member.getHostName()).append(":").append(port.getValue());
+                    if (maxConnectionsPerServer >= 0) {
+                        frontendCollection.append(" maxconn ").append(maxConnectionsPerServer);
+                    }
+                    frontendCollection.append(NEW_LINE);
+                }
             }
         }
     }

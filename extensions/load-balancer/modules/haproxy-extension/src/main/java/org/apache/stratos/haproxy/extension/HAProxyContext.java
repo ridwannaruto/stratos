@@ -43,6 +43,7 @@ public class HAProxyContext {
     private String networkPartitionId;
     private String clusterId;
     private String serviceName;
+    private int maxConnectionsPerServer;
 
     private HAProxyContext() {
         this.haProxyPrivateIp = System.getProperty(Constants.HAPROXY_PRIVATE_IP);
@@ -58,6 +59,7 @@ public class HAProxyContext {
         this.networkPartitionId = System.getProperty(Constants.NETWORK_PARTITION_ID);
         this.clusterId = System.getProperty(Constants.CLUSTER_ID);
         this.serviceName = System.getProperty(Constants.SERVICE_NAME);
+        this.maxConnectionsPerServer = Integer.parseInt(System.getProperty(Constants.MAX_CONNECTIONS_PER_SERVER));
 
         if (log.isDebugEnabled()) {
             log.debug(Constants.HAPROXY_PRIVATE_IP + " = " + haProxyPrivateIp);
@@ -72,6 +74,7 @@ public class HAProxyContext {
             log.debug(Constants.THRIFT_RECEIVER_PORT + " = " + thriftReceiverPort);
             log.debug(Constants.NETWORK_PARTITION_ID + " = " + networkPartitionId);
             log.debug(Constants.CLUSTER_ID + " = " + clusterId);
+            log.debug(Constants.MAX_CONNECTIONS_PER_SERVER + " = " + maxConnectionsPerServer);
         }
     }
 
@@ -153,5 +156,9 @@ public class HAProxyContext {
 
     public String getServiceName() {
         return serviceName;
+    }
+
+    public int getMaxConnectionsPerServer() {
+        return maxConnectionsPerServer;
     }
 }

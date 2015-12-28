@@ -58,49 +58,19 @@ public class HAProxyStatisticsReader implements LoadBalancerStatisticsReader {
 
     @Override
     public int getInFlightRequestCount(String clusterId) {
-        String frontendId, backendId, command, output;
-        String[] array;
-        int totalWeight, weight;
-
-        for (Service service : topologyProvider.getTopology().getServices()) {
-            for (Cluster cluster : service.getClusters()) {
-                if (cluster.getClusterId().equals(clusterId)) {
-                    totalWeight = 0;
-                    if ((service.getPorts() == null) || (service.getPorts().size() == 0)) {
-                        throw new RuntimeException(String.format("No ports found in service: %s", service.getServiceName()));
-                    }
-
-                    for (Port port : service.getPorts()) {
-                        for(String hostname : cluster.getHostNames()) {
-                            backendId = hostname+"-http-members";
-                            for (Member member : cluster.getMembers()) {
-                                // echo "get weight <backend>/<server>" | socat stdio <stats-socket>
-                                command = String.format("%s/get-weight.sh %s %s %s", scriptsPath, backendId, member.getMemberId(), statsSocketFilePath);
-                                try {
-                                    output = CommandUtils.executeCommand(command);
-                                    if ((output != null) && (output.length() > 0)) {
-                                        array = output.split(" ");
-                                        if ((array != null) && (array.length > 0)) {
-                                            weight = Integer.parseInt(array[0]);
-                                            if (log.isDebugEnabled()) {
-                                                log.debug(String.format("Member weight found: [cluster] %s [member] %s [weight] %d", member.getClusterId(), member.getMemberId(), weight));
-                                            }
-                                            totalWeight += weight;
-                                        }
-                                    }
-                                } catch (IOException e) {
-                                    if (log.isErrorEnabled()) {
-                                        log.error(e);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (log.isInfoEnabled()) {
-                        log.info(String.format("Cluster weight found: [cluster] %s [weight] %d", cluster.getClusterId(), totalWeight));
-                    }
-                    return totalWeight;
+        String command = String.format("%s/get-qcur.sh %s", scriptsPath, statsSocketFilePath);
+        try {
+            String output = CommandUtils.executeCommand(command);
+            if ((output != null) && (output.length() > 0)) {
+                int weight = Integer.parseInt(output.trim());
+                if (log.isDebugEnabled()) {
+                    log.debug(String.format("Current queue length found: %d", weight));
                 }
+                return weight;
+            }
+        } catch (IOException e) {
+            if (log.isErrorEnabled()) {
+                log.error(e);
             }
         }
         return 0;
