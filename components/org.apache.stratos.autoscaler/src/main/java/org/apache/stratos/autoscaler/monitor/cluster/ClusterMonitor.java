@@ -700,6 +700,29 @@ public class ClusterMonitor extends Monitor {
         }
     }
 
+    public void handlePredictedMemoryConsumptionEvent(
+        PredictedMemoryConsumptionEvent predictedMemoryConsumptionEvent) {
+        String networkPartitionId = predictedMemoryConsumptionEvent.getNetworkPartitionId();
+        String clusterId = predictedMemoryConsumptionEvent.getClusterId();
+        String clusterInstanceId = predictedMemoryConsumptionEvent.getClusterInstanceId();
+        double[] values = predictedMemoryConsumptionEvent.getPredictions();
+
+        if (log.isDebugEnabled()) {
+            //            log.debug(String.format("Avg Memory Consumption event: [cluster] %s [network-partition] %s "                                     + "[value] %s", clusterId, networkPartitionId, values));
+        }
+        ClusterInstanceContext clusterLevelNetworkPartitionContext = getClusterInstanceContext(
+                networkPartitionId, clusterInstanceId);
+        if (null != clusterLevelNetworkPartitionContext) {
+            clusterLevelNetworkPartitionContext.setPredictedMemoryConsumption(values);
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug(String
+                                  .format("Network partition context is not available for :"
+                                          + " [network partition] %s", networkPartitionId));
+            }
+        }
+    }
+
     public void handleAverageRequestsServingCapabilityEvent(
             AverageRequestsServingCapabilityEvent averageRequestsServingCapabilityEvent) {
 

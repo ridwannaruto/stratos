@@ -463,6 +463,30 @@ public class AutoscalerHealthStatEventReceiver {
                 monitor.handleSecondDerivativeOfRequestsInFlightEvent(secondDerivativeOfRequestsInFlightEvent);
             }
         });
+
+        healthStatEventReceiver.addEventListener(new PredictedMemoryConsumptionEventListener(){
+            @Override
+            protected void onEvent(org.apache.stratos.messaging.event.Event event) {
+
+
+                PredictedMemoryConsumptionEvent predictedMemoryConsumptionEvent
+                        = (PredictedMemoryConsumptionEvent) event;
+                log.info("\n\n+++++ AutoScalerHealthStatEventReceiver.addEventListener.PredictedMemoryConsumptionEventListener.onEvent +++++\n"+predictedMemoryConsumptionEvent.toString()+" "+predictedMemoryConsumptionEvent.getClusterId()+ " " +predictedMemoryConsumptionEvent.getPredictions()+"\n\n");
+                String clusterId = predictedMemoryConsumptionEvent.getClusterId();
+                AutoscalerContext asCtx = AutoscalerContext.getInstance();
+                ClusterMonitor monitor;
+                monitor = asCtx.getClusterMonitor(clusterId);
+                if (null == monitor) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("A cluster monitor is not found in autoscaler context "
+                                                + "[cluster] %s", clusterId));
+                    }
+                    return;
+                }
+                monitor.handlePredictedMemoryConsumptionEvent(predictedMemoryConsumptionEvent);
+            }
+        });
+
     }
 
     private Member getMemberByMemberId(String memberId) {

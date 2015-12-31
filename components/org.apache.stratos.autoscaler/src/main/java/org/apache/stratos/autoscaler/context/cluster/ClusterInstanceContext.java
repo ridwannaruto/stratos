@@ -31,10 +31,7 @@ import org.apache.stratos.messaging.domain.topology.Member;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.rule.FactHandle;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /*
  * It holds the runtime data of a VM cluster
@@ -49,7 +46,7 @@ public class ClusterInstanceContext extends InstanceContext {
     private boolean rifReset, averageRifReset, gradientRifReset, secondDerivativeRifRest;
     //boolean values to keep whether the memory consumption parameters are reset or not
     private boolean memoryConsumptionReset, averageMemoryConsumptionReset,
-            gradientMemoryConsumptionReset, secondDerivativeMemoryConsumptionRest;
+            gradientMemoryConsumptionReset, secondDerivativeMemoryConsumptionRest,predictedMemoryConsumptionReset;
     //boolean values to keep whether the load average parameters are reset or not
     private boolean loadAverageReset, averageLoadAverageReset, gradientLoadAverageReset,
             secondDerivativeLoadAverageRest;
@@ -314,6 +311,11 @@ public class ClusterInstanceContext extends InstanceContext {
         }
     }
 
+    public void setPredictedMemoryConsumption(double[] predictions) {
+        memoryConsumption.setPredictions(predictions);
+        predictedMemoryConsumptionReset = true;
+        //Todo : add rest of the logic of handling synchronization between Other memory updates
+    }
     public float getMemoryConsumptionSecondDerivative() {
         return memoryConsumption.getSecondDerivative();
     }

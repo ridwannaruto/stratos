@@ -46,6 +46,7 @@ public class HealthStatMessageProcessorChain extends MessageProcessorChain {
     private MemberSecondDerivativeOfMemoryConsumptionMessageProcessor memberSecondDerivativeOfMemoryConsumptionMessageProcessor;
     private AverageRequestsServingCapabilityMessageProcessor averageRequestsServingCapabilityMessageProcessor;
 
+    private PredictedMemoryConsumptionMessageProcessor predictedMemoryConsumptionMessageProcessor;
     private MemberFaultMessageProcessor memberFaultMessageProcessor;
 
     protected void initialize() {
@@ -87,6 +88,10 @@ public class HealthStatMessageProcessorChain extends MessageProcessorChain {
         add(gradientOfMemoryConsumptionMessageProcessor);
         secondDerivativeOfMemoryConsumptionMessageProcessor = new SecondDerivativeOfMemoryConsumptionMessageProcessor();
         add(secondDerivativeOfMemoryConsumptionMessageProcessor);
+
+
+        predictedMemoryConsumptionMessageProcessor=new PredictedMemoryConsumptionMessageProcessor();
+        add(predictedMemoryConsumptionMessageProcessor);
 
         memberFaultMessageProcessor = new MemberFaultMessageProcessor();
         add(memberFaultMessageProcessor);
@@ -130,6 +135,8 @@ public class HealthStatMessageProcessorChain extends MessageProcessorChain {
         } else if (eventListener instanceof SecondDerivativeOfRequestsInFlightEventListener) {
             secondDerivativeOfRequestsInFlightMessageProcessor.addEventListener(eventListener);
 
+        } else if(eventListener instanceof PredictedMemoryConsumptionEventListener){
+            predictedMemoryConsumptionMessageProcessor.addEventListener(eventListener);
         } else {
             throw new RuntimeException("Unknown event listener");
         }

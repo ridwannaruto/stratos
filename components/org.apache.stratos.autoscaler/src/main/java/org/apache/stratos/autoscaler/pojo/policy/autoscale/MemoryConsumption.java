@@ -20,6 +20,7 @@
 package org.apache.stratos.autoscaler.pojo.policy.autoscale;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * The model class for MemoryConsumption definition.
@@ -30,7 +31,14 @@ public class MemoryConsumption implements Serializable {
     private float average = 0.0f;
     private float secondDerivative = 0.0f;
     private float gradient = 0.0f;
+    private double [] predictions;
 
+    public void setPredictions(double[] predictions) {
+
+        this.predictions = new double[predictions.length];
+        this.predictions= Arrays.copyOf(predictions, predictions.length);
+
+    }
     /**
      * Gets the value of the average property.
      */
