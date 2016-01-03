@@ -20,4 +20,4 @@
 #
 # --------------------------------------------------------------
 
-echo "show stat" | sudo socat stdio $1 | tail -n+2 | awk -F "\"*,\"*" '{s+=$3} END {printf s}'
+echo "show stat" | sudo socat stdio $2 | grep $1 | awk -F "\"*,\"*" '{print $3}'
