@@ -710,6 +710,9 @@ public class ClusterMonitor extends Monitor {
         if (log.isDebugEnabled()) {
             //            log.debug(String.format("Avg Memory Consumption event: [cluster] %s [network-partition] %s "                                     + "[value] %s", clusterId, networkPartitionId, values));
         }
+
+        log.info("\n\n+++++ ClusterMonitor.handlePredictedMemoryConsumptionEvent\n"+predictedMemoryConsumptionEvent.getClusterId()+ " " +predictedMemoryConsumptionEvent.getPredictions()+"\n\n");
+
         ClusterInstanceContext clusterLevelNetworkPartitionContext = getClusterInstanceContext(
                 networkPartitionId, clusterInstanceId);
         if (null != clusterLevelNetworkPartitionContext) {
@@ -722,6 +725,57 @@ public class ClusterMonitor extends Monitor {
             }
         }
     }
+
+    public void handlePredictedLoadAverageEvent(
+         PredictedLoadAverageEvent predictedLoadAverageEvent) {
+        String networkPartitionId = predictedLoadAverageEvent.getNetworkPartitionId();
+        String clusterId = predictedLoadAverageEvent.getClusterId();
+        String clusterInstanceId = predictedLoadAverageEvent.getClusterInstanceId();
+        double[] values = predictedLoadAverageEvent.getPredictions();
+
+        if (log.isDebugEnabled()) {
+            //            log.debug(String.format("Avg Memory Consumption event: [cluster] %s [network-partition] %s "                                     + "[value] %s", clusterId, networkPartitionId, values));
+        }
+        log.info("\n\n+++++ ClusterMonitor.handlePredictedLoadAverageEvennt\n"+predictedLoadAverageEvent.getClusterId()+ " " +predictedLoadAverageEvent.getPredictions()+"\n\n");
+
+        ClusterInstanceContext clusterLevelNetworkPartitionContext = getClusterInstanceContext(
+                networkPartitionId, clusterInstanceId);
+        if (null != clusterLevelNetworkPartitionContext) {
+            clusterLevelNetworkPartitionContext.setPredictedLoadAverage(values);
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug(String
+                                  .format("Network partition context is not available for :"
+                                          + " [network partition] %s", networkPartitionId));
+            }
+        }
+    }
+
+    public void handlePredictedRequestInFlightEvent(
+        PredictedRequestsInFlightEvent predictedRequestsInFlightEvent) {
+        String networkPartitionId = predictedRequestsInFlightEvent.getNetworkPartitionId();
+        String clusterId = predictedRequestsInFlightEvent.getClusterId();
+        String clusterInstanceId = predictedRequestsInFlightEvent.getClusterInstanceId();
+        double[] values = predictedRequestsInFlightEvent.getPredictions();
+
+        if (log.isDebugEnabled()) {
+            //            log.debug(String.format("Avg Memory Consumption event: [cluster] %s [network-partition] %s "                                     + "[value] %s", clusterId, networkPartitionId, values));
+        }
+        log.info("\n\n+++++ ClusterMonitor.handlePredictedRequestInFlightEvent+++++\n"+predictedRequestsInFlightEvent.getClusterId()+ " " +predictedRequestsInFlightEvent.getPredictions()+"\n\n");
+
+        ClusterInstanceContext clusterLevelNetworkPartitionContext = getClusterInstanceContext(
+                networkPartitionId, clusterInstanceId);
+        if (null != clusterLevelNetworkPartitionContext) {
+            clusterLevelNetworkPartitionContext.setPredictedRequestInFlight(values);
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug(String
+                                  .format("Network partition context is not available for :"
+                                          + " [network partition] %s", networkPartitionId));
+            }
+        }
+    }
+
 
     public void handleAverageRequestsServingCapabilityEvent(
             AverageRequestsServingCapabilityEvent averageRequestsServingCapabilityEvent) {

@@ -43,13 +43,13 @@ public class ClusterInstanceContext extends InstanceContext {
     // Map<PartitionId, Partition Context>
     protected Map<String, ClusterLevelPartitionContext> partitionCtxts;
     //boolean values to keep whether the requests in flight parameters are reset or not
-    private boolean rifReset, averageRifReset, gradientRifReset, secondDerivativeRifRest;
+    private boolean rifReset, averageRifReset, gradientRifReset, secondDerivativeRifRest,predictedRifReset;
     //boolean values to keep whether the memory consumption parameters are reset or not
     private boolean memoryConsumptionReset, averageMemoryConsumptionReset,
             gradientMemoryConsumptionReset, secondDerivativeMemoryConsumptionRest,predictedMemoryConsumptionReset;
     //boolean values to keep whether the load average parameters are reset or not
     private boolean loadAverageReset, averageLoadAverageReset, gradientLoadAverageReset,
-            secondDerivativeLoadAverageRest;
+            secondDerivativeLoadAverageRest,predictedLoadAverageReset;
     //boolean values to keep whether average requests served per instance parameters are reset or not
     private boolean averageRequestServedPerInstanceReset;
     //Following information will keep events details
@@ -312,10 +312,31 @@ public class ClusterInstanceContext extends InstanceContext {
     }
 
     public void setPredictedMemoryConsumption(double[] predictions) {
+
+        log.info("\n\n+++++ ClusterInstanceContext.setPredictedMemoryConsumption+++++\n"+predictions+"\n\n");
+
         memoryConsumption.setPredictions(predictions);
         predictedMemoryConsumptionReset = true;
         //Todo : add rest of the logic of handling synchronization between Other memory updates
     }
+    public void setPredictedLoadAverage(double[] predictions) {
+
+        log.info("\n\n+++++ ClusterInstanceContext.setPredctedLoadAverage+++++\n"+predictions+"\n\n");
+
+        loadAverage.setPredictions(predictions);
+        predictedLoadAverageReset = true;
+        //Todo : add rest of the logic of handling synchronization between Other memory updates
+    }
+
+    public void setPredictedRequestInFlight(double[] predictions) {
+
+        log.info("\n\n+++++ ClusterInstanceContext.hsetPredctedRequest Inflight+++++\n"+predictions+"\n\n");
+
+        requestsInFlight.setPredictions(predictions);
+        predictedRifReset = true;
+        //Todo : add rest of the logic of handling synchronization between Other memory updates
+    }
+
     public float getMemoryConsumptionSecondDerivative() {
         return memoryConsumption.getSecondDerivative();
     }
