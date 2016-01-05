@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REngine;
 import org.rosuda.REngine.REngineException;
+import org.rosuda.REngine.Rserve.RConnection;
 import org.wso2.siddhi.core.config.SiddhiContext;
 import org.wso2.siddhi.core.event.StreamEvent;
 import org.wso2.siddhi.core.event.in.InEvent;
@@ -45,10 +46,7 @@ import org.wso2.siddhi.query.api.extension.annotation.SiddhiExtension;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -69,13 +67,15 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
     private List<InEvent> newEventList;
     private List<RemoveEvent> oldEventList;
     private ISchedulerSiddhiQueue<StreamEvent> window;
+    private Queue<Double> globalData=new LinkedList<>();
+    private int MAX_TRAIN_SET_SIZE=1000;
 
 
     private ISchedulerSiddhiQueue<StreamEvent> globalWindow;
     private long[] timeStamps;
     private double[] dataValues;
 
-    private REngine rEngine;
+    private RConnection rEngine;
 
     @Override
     protected void processEvent(InEvent event) {
@@ -93,7 +93,7 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
 
         for(int i=0;i<e1.getData().length;i++)
         {
-            log.info("++++"+e1.getData(i)+" "+ e2.getData(i));
+
             if(!e1.getData(i).equals(e2.getData(i)))
                 return false;
         }
@@ -131,10 +131,6 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
     @Override
     public void run() {
         acquireLock();
-
-        log.error("+++++++++++ \n\n Thread Id "+          Thread.currentThread().getId()+" this id:"+
-                  System.identityHashCode(this)+ "   " +"as:"+ newEventList.size());
-
         try {
             long scheduledTime = System.currentTimeMillis();
             try {
@@ -150,17 +146,17 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
                         }
 
                         if (newEventList.size() > 0) {
-                            InEvent[] inEvents =
-                                    newEventList.toArray(new InEvent[newEventList.size()]);
+                            InEvent[] inEvents = newEventList.toArray(new InEvent[newEventList.size()]);
                             for (InEvent inEvent : inEvents) {
                                 window.put(new RemoveEvent(inEvent, -1));
                             }
 
-                            InEvent[] predictions = getPredictions();
-
+                            double dataSet[] = extractDataset();
+                             InEvent[] predictions = getPredictions(dataSet);
                             for (InEvent inEvent : predictions) {
                                 window.put(new RemoveEvent(inEvent, -1));
                             }
+
                             nextProcessor.process(new InListEvent(predictions));
                             newEventList.clear();
                         }
@@ -191,12 +187,46 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
         }
     }
 
-    public synchronized InEvent[]  getPredictions() {
+    public double[] extractDataset(){
+
+        log.info("++++ global list"+globalData.toString());
+        globalData.add(getAverage());
+        log.info("++++ global list"+globalData.toString());
+
+        if(globalData.size()>MAX_TRAIN_SET_SIZE) {
+            globalData.poll();
+        }
+
+        double[] dataSet=new double[globalData.size()];
+
+        Iterator<Double> iterator=globalData.iterator();
+        int counter=0;
+        while(iterator.hasNext()){
+            dataSet[counter++]=iterator.next();
+        }
+        return  dataSet;
+    }
+    public double getAverage(){
+
+        collectLastWindow();
+        int i=0;
+        double sum=0;
+        for( i=0;i<dataValues.length;i++)
+        {
+                log.info("++++ values : "+dataValues[i]);
+                sum+=dataValues[i];
+        }
+
+        if(i==0)
+        return  0.0;
+
+        return sum/i;
+    }
+
+    public synchronized InEvent[]  getPredictions(double [] dataValues) {
 
         try {
-            long id = Thread.currentThread().getId();
-            log.info("gedPrecition "+id);
-            collectLastWindow();
+            long id=Thread.currentThread().getId();
             long startTime=System.currentTimeMillis();
             rEngine.assign("data" + id, dataValues);
             log.info("ID:"+id+ "array is assigned to R"+Arrays.toString(dataValues));
@@ -229,12 +259,10 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
 
 
     private synchronized  void collectLastWindow() {
-
         long id = Thread.currentThread().getId();
         Attribute.Type attrType = subjectAttrType;
         timeStamps = new long[newEventList.size()];
         dataValues = new double[newEventList.size()];
-
         int indexOfEvent = 0;
         for (indexOfEvent = 0; indexOfEvent < newEventList.size(); indexOfEvent++) {
             InEvent eventToPredict = newEventList.get(indexOfEvent);
@@ -275,6 +303,8 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
         window.reSchedule();
     }
 
+
+
     @Override
     protected void init(Expression[] parameters, QueryPostProcessingElement nextProcessor, AbstractDefinition streamDefinition, String elementId, boolean async, SiddhiContext siddhiContext) {
         log.info("\n\n!!!! Predictor window Processor created !!!!"+this.siddhiContext.isDistributedProcessingEnabled()+"\n\n");
@@ -285,21 +315,14 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
         }
 
         try {
-            rEngine = JRIConnection.getConnection();
+            rEngine = JRIConnection.getRserverConnection();
             log.info("ElementID: "+ elementId+" streamId:"+streamDefinition.getId() +"  streamObject"+streamDefinition+"  ID:"+ Thread.currentThread().getId()+"rEngine connection Established");
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (REngineException e) {
             e.printStackTrace();
         } catch (REXPMismatchException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -329,6 +352,61 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
         window.schedule();
 
     }
+
+//    @Override
+//    protected void init(Expression[] parameters, QueryPostProcessingElement nextProcessor, AbstractDefinition streamDefinition, String elementId, boolean async, SiddhiContext siddhiContext) {
+//        log.info("\n\n!!!! Predictor window Processor created !!!!"+this.siddhiContext.isDistributedProcessingEnabled()+"\n\n");
+//        if (parameters[0] instanceof IntConstant) {
+//            timeToKeep = ((IntConstant) parameters[0]).getValue();
+//        } else {
+//            timeToKeep = ((LongConstant) parameters[0]).getValue();
+//        }
+//
+//        try {
+//            rEngine = JRIConnection.getConnection();
+//            log.info("ElementID: "+ elementId+" streamId:"+streamDefinition.getId() +"  streamObject"+streamDefinition+"  ID:"+ Thread.currentThread().getId()+"rEngine connection Established");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } catch (InvocationTargetException e) {
+//            e.printStackTrace();
+//        } catch (NoSuchMethodException e) {
+//            e.printStackTrace();
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        } catch (REngineException e) {
+//            e.printStackTrace();
+//        } catch (REXPMismatchException e) {
+//            e.printStackTrace();
+//        } catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//
+//
+//        String subjectedAttr = ((Variable) parameters[1]).getAttributeName();
+//        subjectAttrIndex = streamDefinition.getAttributePosition(subjectedAttr);
+//        subjectAttrType = streamDefinition.getAttributeType(subjectedAttr);
+//
+//        subjectedAttr = ((Variable) parameters[2]).getAttributeName();
+//        outputIndex = streamDefinition.getAttributePosition(subjectedAttr);
+//
+//        oldEventList = new ArrayList<RemoveEvent>();
+//        if (this.siddhiContext.isDistributedProcessingEnabled()) {
+//            newEventList = this.siddhiContext.getHazelcastInstance().getList(elementId + "-newEventList");
+//        } else {
+//            newEventList = new ArrayList<InEvent>();
+//        }
+//
+//        if (this.siddhiContext.isDistributedProcessingEnabled()) {
+//            window = new SchedulerSiddhiQueueGrid<StreamEvent>(elementId, this, this.siddhiContext, this.async);
+//            globalWindow=new SchedulerSiddhiQueueGrid<StreamEvent>(elementId, this, this.siddhiContext, this.async);
+//        } else {
+//            window = new SchedulerSiddhiQueue<StreamEvent>(this);
+//            globalWindow = new SchedulerSiddhiQueue<StreamEvent>(this);
+//        }
+//        //Ordinary scheduling
+//        window.schedule();
+//
+//    }
 
     @Override
     public void schedule() {
