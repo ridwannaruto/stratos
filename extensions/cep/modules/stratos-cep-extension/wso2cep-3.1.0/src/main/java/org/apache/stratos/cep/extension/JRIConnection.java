@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 
+import org.rosuda.REngine.Rserve.RConnection;
+import org.rosuda.REngine.Rserve.RserveException;
 
 public class JRIConnection {
 	private static volatile REngine rConection;
@@ -83,6 +85,15 @@ public class JRIConnection {
 		}
 	}
 
+	public static RConnection getRserverConnection()
+			throws REngineException, IOException, REXPMismatchException {
+		RConnection rcon=new RConnection();
+
+		String str=readScript(ExtensionConstants.MODEL_PATH);
+		rcon.parseAndEval(str);
+		return rcon;
+	}
+
 	/**
 	 * Close the connection upon the deletion of this object
 	 * @throws Throwable
@@ -91,4 +102,49 @@ public class JRIConnection {
 		super.finalize();
 		rConection.close();
 	}
+
+
+
+	static {
+		final int xaa=5;
+		Thread t = new Thread(new Runnable() {
+			public void run() {
+				String command = "nohup R CMD Rserve --vanilla ";
+				try {
+					final Process process = Runtime.getRuntime().exec(command);
+					Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+						@Override public void run() {
+							try {
+								Runtime.getRuntime().exec("killall Rserve");
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+
+						}
+					}));
+
+					BufferedReader buf = new BufferedReader(new InputStreamReader(
+							process.getInputStream()));
+					String line;
+					while ((line = buf.readLine()) != null) {
+						//						System.out.println(line);
+					}
+					buf.close();
+				} catch (Exception e ){
+					e.printStackTrace();
+				}
+			}
+		}
+
+		);
+
+		t.setDaemon(true);
+		t.start();
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
 }
