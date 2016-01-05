@@ -30,6 +30,7 @@ public class LoadAverage implements Serializable {
     private float average = 0.0f;
     private float secondDerivative = 0.0f;
     private float gradient = 0.0f;
+    private double [] predictions;
 
     /**
      * Gets the value of the average property.
@@ -77,5 +78,10 @@ public class LoadAverage implements Serializable {
     public String toString() {
         return String.format("[average] %f [second-derivative] %f [gradient] %f",
                 getAverage(), getSecondDerivative(), getGradient());
+    }
+
+    public void setPredictions(double [] predictions)
+    {
+        this.predictions=predictions;
     }
 }

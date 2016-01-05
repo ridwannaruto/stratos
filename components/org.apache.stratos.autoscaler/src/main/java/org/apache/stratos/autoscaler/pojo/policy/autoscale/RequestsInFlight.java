@@ -32,6 +32,11 @@ public class RequestsInFlight implements Serializable {
     private float gradient;
     private float scaleDownMarginOfGradient;
     private float scaleDownMarginOfSecondDerivative;
+    private double [] predictions;
+
+    public void setPredictions(double[] predictions) {
+        this.predictions = predictions;
+    }
 
     /**
      * Gets the value of the average property.
