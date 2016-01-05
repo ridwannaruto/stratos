@@ -487,6 +487,55 @@ public class AutoscalerHealthStatEventReceiver {
             }
         });
 
+
+
+        healthStatEventReceiver.addEventListener(new PredictedLoadAverageEventListener(){
+            @Override
+            protected void onEvent(org.apache.stratos.messaging.event.Event event) {
+
+
+                PredictedLoadAverageEvent predictedLoadAverageEvent
+                        = (PredictedLoadAverageEvent) event;
+                log.info("\n\n+++++ AutoScalerHealthStatEventReceiver.addEventListener.PredictedLoadAverageEventListener.onEvent +++++\n"+predictedLoadAverageEvent.toString()+" "+predictedLoadAverageEvent.getClusterId()+ " " +predictedLoadAverageEvent.getPredictions()+"++++++++\n\n");
+                String clusterId = predictedLoadAverageEvent.getClusterId();
+                AutoscalerContext asCtx = AutoscalerContext.getInstance();
+                ClusterMonitor monitor;
+                monitor = asCtx.getClusterMonitor(clusterId);
+                if (null == monitor) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("A cluster monitor is not found in autoscaler context "
+                                                + "[cluster] %s", clusterId));
+                    }
+                    return;
+                }
+                monitor.handlePredictedLoadAverageEvent(predictedLoadAverageEvent);
+            }
+        });
+
+
+        healthStatEventReceiver.addEventListener(new PredictedRequestInFlightEventListener(){
+            @Override
+            protected void onEvent(org.apache.stratos.messaging.event.Event event) {
+
+
+                PredictedRequestsInFlightEvent predictedRequestsInFlightEvent
+                        = (PredictedRequestsInFlightEvent) event;
+                log.info("\n\n+++++ AutoScalerHealthStatEventReceiver.addEventListener.PredictedRequestInFlightEventListener.onEvent +++++\n"+predictedRequestsInFlightEvent.toString()+" "+predictedRequestsInFlightEvent.getClusterId()+ " " +predictedRequestsInFlightEvent.getPredictions()+"\n\n");
+                String clusterId = predictedRequestsInFlightEvent.getClusterId();
+                AutoscalerContext asCtx = AutoscalerContext.getInstance();
+                ClusterMonitor monitor;
+                monitor = asCtx.getClusterMonitor(clusterId);
+                if (null == monitor) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("A cluster monitor is not found in autoscaler context "
+                                                + "[cluster] %s", clusterId));
+                    }
+                    return;
+                }
+                monitor.handlePredictedRequestInFlightEvent(predictedRequestsInFlightEvent);
+            }
+        });
+
     }
 
     private Member getMemberByMemberId(String memberId) {

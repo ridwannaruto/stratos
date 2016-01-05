@@ -19,8 +19,6 @@
 
 package org.apache.stratos.messaging.event.health.stat;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.stratos.messaging.event.Event;
 
 public class PredictedMemoryConsumptionEvent extends Event {
@@ -29,7 +27,7 @@ public class PredictedMemoryConsumptionEvent extends Event {
     private final String clusterInstanceId;
     private final double value;
     private final String predictedValues;
-    private static final Log log = LogFactory.getLog(PredictedMemoryConsumptionEvent.class);
+
 
     public PredictedMemoryConsumptionEvent(String networkPartitionId, String clusterId,
                                            String clusterInstanceId, double value,
