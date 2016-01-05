@@ -20,6 +20,7 @@
  */
 package org.apache.stratos.messaging.message.processor.health.stat;
 
+import org.apache.stratos.messaging.event.health.stat.MemberPredictedLoadAverageEvent;
 import org.apache.stratos.messaging.listener.EventListener;
 import org.apache.stratos.messaging.listener.health.stat.*;
 import org.apache.stratos.messaging.message.processor.MessageProcessorChain;
@@ -29,116 +30,160 @@ import org.apache.stratos.messaging.message.processor.MessageProcessorChain;
  */
 public class HealthStatMessageProcessorChain extends MessageProcessorChain {
 
-    private AverageLoadAverageMessageProcessor averageLoadAverageMessageProcessor;
-    private AverageMemoryConsumptionMessageProcessor averageMemoryConsumptionMessageProcessor;
-    private AverageRequestsInFlightMessageProcessor averageRequestsInFlightMessageProcessor;
-    private GradientOfLoadAverageMessageProcessor gradientOfLoadAverageMessageProcessor;
-    private GradientOfMemoryConsumptionMessageProcessor gradientOfMemoryConsumptionMessageProcessor;
-    private GradientOfRequestsInFlightMessageProcessor gradientOfRequestsInFlightMessageProcessor;
-    private SecondDerivativeOfLoadAverageMessageProcessor secondDerivativeOfLoadAverageMessageProcessor;
-    private SecondDerivativeOfMemoryConsumptionMessageProcessor secondDerivativeOfMemoryConsumptionMessageProcessor;
-    private SecondDerivativeOfRequestsInFlightMessageProcessor secondDerivativeOfRequestsInFlightMessageProcessor;
-    private MemberAverageLoadAverageMessageProcessor memberAverageLoadAverageMessageProcessor;
-    private MemberAverageMemoryConsumptionMessageProcessor memberAverageMemoryConsumptionMessageProcessor;
-    private MemberGradientOfLoadAverageMessageProcessor memberGradientOfLoadAverageMessageProcessor;
-    private MemberGradientOfMemoryConsumptionMessageProcessor memberGradientOfMemoryConsumptionMessageProcessor;
-    private MemberSecondDerivativeOfLoadAverageMessageProcessor memberSecondDerivativeOfLoadAverageMessageProcessor;
-    private MemberSecondDerivativeOfMemoryConsumptionMessageProcessor memberSecondDerivativeOfMemoryConsumptionMessageProcessor;
-    private AverageRequestsServingCapabilityMessageProcessor averageRequestsServingCapabilityMessageProcessor;
+	private AverageLoadAverageMessageProcessor averageLoadAverageMessageProcessor;
+	private AverageMemoryConsumptionMessageProcessor averageMemoryConsumptionMessageProcessor;
+	private AverageRequestsInFlightMessageProcessor averageRequestsInFlightMessageProcessor;
+	private GradientOfLoadAverageMessageProcessor gradientOfLoadAverageMessageProcessor;
+	private GradientOfMemoryConsumptionMessageProcessor gradientOfMemoryConsumptionMessageProcessor;
+	private GradientOfRequestsInFlightMessageProcessor gradientOfRequestsInFlightMessageProcessor;
+	private SecondDerivativeOfLoadAverageMessageProcessor
+			secondDerivativeOfLoadAverageMessageProcessor;
+	private SecondDerivativeOfMemoryConsumptionMessageProcessor
+			secondDerivativeOfMemoryConsumptionMessageProcessor;
+	private SecondDerivativeOfRequestsInFlightMessageProcessor
+			secondDerivativeOfRequestsInFlightMessageProcessor;
+	private MemberAverageLoadAverageMessageProcessor memberAverageLoadAverageMessageProcessor;
+	private MemberAverageMemoryConsumptionMessageProcessor
+			memberAverageMemoryConsumptionMessageProcessor;
+	private MemberGradientOfLoadAverageMessageProcessor memberGradientOfLoadAverageMessageProcessor;
+	private MemberGradientOfMemoryConsumptionMessageProcessor
+			memberGradientOfMemoryConsumptionMessageProcessor;
+	private MemberSecondDerivativeOfLoadAverageMessageProcessor
+			memberSecondDerivativeOfLoadAverageMessageProcessor;
+	private MemberSecondDerivativeOfMemoryConsumptionMessageProcessor
+			memberSecondDerivativeOfMemoryConsumptionMessageProcessor;
+	private AverageRequestsServingCapabilityMessageProcessor
+			averageRequestsServingCapabilityMessageProcessor;
 
-    private PredictedMemoryConsumptionMessageProcessor predictedMemoryConsumptionMessageProcessor;
-    private MemberFaultMessageProcessor memberFaultMessageProcessor;
-
-    protected void initialize() {
-
-        //Most frequent first order is defined in default
-        memberAverageLoadAverageMessageProcessor = new MemberAverageLoadAverageMessageProcessor();
-        add(memberAverageLoadAverageMessageProcessor);
-        memberGradientOfLoadAverageMessageProcessor = new MemberGradientOfLoadAverageMessageProcessor();
-        add(memberGradientOfLoadAverageMessageProcessor);
-        memberSecondDerivativeOfLoadAverageMessageProcessor = new MemberSecondDerivativeOfLoadAverageMessageProcessor();
-        add(memberSecondDerivativeOfLoadAverageMessageProcessor);
-
-        memberAverageMemoryConsumptionMessageProcessor = new MemberAverageMemoryConsumptionMessageProcessor();
-        add(memberAverageMemoryConsumptionMessageProcessor);
-        memberGradientOfMemoryConsumptionMessageProcessor = new MemberGradientOfMemoryConsumptionMessageProcessor();
-        add(memberGradientOfMemoryConsumptionMessageProcessor);
-        memberSecondDerivativeOfMemoryConsumptionMessageProcessor = new MemberSecondDerivativeOfMemoryConsumptionMessageProcessor();
-        add(memberSecondDerivativeOfMemoryConsumptionMessageProcessor);
-
-        averageRequestsInFlightMessageProcessor = new AverageRequestsInFlightMessageProcessor();
-        add(averageRequestsInFlightMessageProcessor);
-        averageRequestsServingCapabilityMessageProcessor = new AverageRequestsServingCapabilityMessageProcessor();
-        add(averageRequestsServingCapabilityMessageProcessor);
-        gradientOfRequestsInFlightMessageProcessor = new GradientOfRequestsInFlightMessageProcessor();
-        add(gradientOfRequestsInFlightMessageProcessor);
-        secondDerivativeOfRequestsInFlightMessageProcessor = new SecondDerivativeOfRequestsInFlightMessageProcessor();
-        add(secondDerivativeOfRequestsInFlightMessageProcessor);
-
-        averageLoadAverageMessageProcessor = new AverageLoadAverageMessageProcessor();
-        add(averageLoadAverageMessageProcessor);
-        gradientOfLoadAverageMessageProcessor = new GradientOfLoadAverageMessageProcessor();
-        add(gradientOfLoadAverageMessageProcessor);
-        secondDerivativeOfLoadAverageMessageProcessor = new SecondDerivativeOfLoadAverageMessageProcessor();
-        add(secondDerivativeOfLoadAverageMessageProcessor);
-
-        averageMemoryConsumptionMessageProcessor = new AverageMemoryConsumptionMessageProcessor();
-        add(averageMemoryConsumptionMessageProcessor);
-        gradientOfMemoryConsumptionMessageProcessor = new GradientOfMemoryConsumptionMessageProcessor();
-        add(gradientOfMemoryConsumptionMessageProcessor);
-        secondDerivativeOfMemoryConsumptionMessageProcessor = new SecondDerivativeOfMemoryConsumptionMessageProcessor();
-        add(secondDerivativeOfMemoryConsumptionMessageProcessor);
+	private PredictedMemoryConsumptionMessageProcessor predictedMemoryConsumptionMessageProcessor;
+	private PredictedLoadAverageMessageProcessor predictedLoadAverageMessageProcessor;
+	private PredictedRequestInFlightMessageProcessor predictedRequestInFlightMessageProcessor;
+	private MemberPredictedLoadAverageMessageProcessor memberPredictedLoadAverageMessageProcessor;
+	private MemberPredictedMemoryConsumptionMessageProcessor memberPredictedMemoryConsumptionMessageProcessor;
 
 
-        predictedMemoryConsumptionMessageProcessor=new PredictedMemoryConsumptionMessageProcessor();
-        add(predictedMemoryConsumptionMessageProcessor);
+	private MemberFaultMessageProcessor memberFaultMessageProcessor;
 
-        memberFaultMessageProcessor = new MemberFaultMessageProcessor();
-        add(memberFaultMessageProcessor);
-    }
+	protected void initialize() {
 
-    public void addEventListener(EventListener eventListener) {
+		//Most frequent first order is defined in default
+		memberAverageLoadAverageMessageProcessor = new MemberAverageLoadAverageMessageProcessor();
+		add(memberAverageLoadAverageMessageProcessor);
+		memberGradientOfLoadAverageMessageProcessor =
+				new MemberGradientOfLoadAverageMessageProcessor();
+		add(memberGradientOfLoadAverageMessageProcessor);
+		memberSecondDerivativeOfLoadAverageMessageProcessor =
+				new MemberSecondDerivativeOfLoadAverageMessageProcessor();
+		add(memberSecondDerivativeOfLoadAverageMessageProcessor);
 
-        if (eventListener instanceof AverageLoadAverageEventListener) {
-            averageLoadAverageMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof AverageMemoryConsumptionEventListener) {
-            averageMemoryConsumptionMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof AverageRequestsInFlightEventListener) {
-            averageRequestsInFlightMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof AverageRequestsServingCapabilityEventListener) {
-            averageRequestsServingCapabilityMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof GradientOfLoadAverageEventListener) {
-            gradientOfLoadAverageMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof GradientOfMemoryConsumptionEventListener) {
-            gradientOfMemoryConsumptionMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof GradientOfRequestsInFlightEventListener) {
-            gradientOfRequestsInFlightMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof MemberAverageLoadAverageEventListener) {
-            memberAverageLoadAverageMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof MemberAverageMemoryConsumptionEventListener) {
-            memberAverageMemoryConsumptionMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof MemberFaultEventListener) {
-            memberFaultMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof MemberGradientOfLoadAverageEventListener) {
-            memberGradientOfLoadAverageMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof MemberGradientOfMemoryConsumptionEventListener) {
-            memberGradientOfMemoryConsumptionMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof MemberSecondDerivativeOfLoadAverageEventListener) {
-            memberSecondDerivativeOfLoadAverageMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof MemberSecondDerivativeOfMemoryConsumptionEventListener) {
-            memberSecondDerivativeOfMemoryConsumptionMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof SecondDerivativeOfLoadAverageEventListener) {
-            secondDerivativeOfLoadAverageMessageProcessor.addEventListener(eventListener);
-        } else if (eventListener instanceof SecondDerivativeOfMemoryConsumptionEventListener) {
-            secondDerivativeOfMemoryConsumptionMessageProcessor.addEventListener(eventListener);
+		memberAverageMemoryConsumptionMessageProcessor =
+				new MemberAverageMemoryConsumptionMessageProcessor();
+		add(memberAverageMemoryConsumptionMessageProcessor);
+		memberGradientOfMemoryConsumptionMessageProcessor =
+				new MemberGradientOfMemoryConsumptionMessageProcessor();
+		add(memberGradientOfMemoryConsumptionMessageProcessor);
+		memberSecondDerivativeOfMemoryConsumptionMessageProcessor =
+				new MemberSecondDerivativeOfMemoryConsumptionMessageProcessor();
+		add(memberSecondDerivativeOfMemoryConsumptionMessageProcessor);
 
-        } else if (eventListener instanceof SecondDerivativeOfRequestsInFlightEventListener) {
-            secondDerivativeOfRequestsInFlightMessageProcessor.addEventListener(eventListener);
+		averageRequestsInFlightMessageProcessor = new AverageRequestsInFlightMessageProcessor();
+		add(averageRequestsInFlightMessageProcessor);
+		averageRequestsServingCapabilityMessageProcessor =
+				new AverageRequestsServingCapabilityMessageProcessor();
+		add(averageRequestsServingCapabilityMessageProcessor);
+		gradientOfRequestsInFlightMessageProcessor =
+				new GradientOfRequestsInFlightMessageProcessor();
+		add(gradientOfRequestsInFlightMessageProcessor);
+		secondDerivativeOfRequestsInFlightMessageProcessor =
+				new SecondDerivativeOfRequestsInFlightMessageProcessor();
+		add(secondDerivativeOfRequestsInFlightMessageProcessor);
 
-        } else if(eventListener instanceof PredictedMemoryConsumptionEventListener){
-            predictedMemoryConsumptionMessageProcessor.addEventListener(eventListener);
-        } else {
-            throw new RuntimeException("Unknown event listener");
-        }
-    }
+		averageLoadAverageMessageProcessor = new AverageLoadAverageMessageProcessor();
+		add(averageLoadAverageMessageProcessor);
+		gradientOfLoadAverageMessageProcessor = new GradientOfLoadAverageMessageProcessor();
+		add(gradientOfLoadAverageMessageProcessor);
+		secondDerivativeOfLoadAverageMessageProcessor =
+				new SecondDerivativeOfLoadAverageMessageProcessor();
+		add(secondDerivativeOfLoadAverageMessageProcessor);
+
+		averageMemoryConsumptionMessageProcessor = new AverageMemoryConsumptionMessageProcessor();
+		add(averageMemoryConsumptionMessageProcessor);
+		gradientOfMemoryConsumptionMessageProcessor =
+				new GradientOfMemoryConsumptionMessageProcessor();
+		add(gradientOfMemoryConsumptionMessageProcessor);
+		secondDerivativeOfMemoryConsumptionMessageProcessor =
+				new SecondDerivativeOfMemoryConsumptionMessageProcessor();
+		add(secondDerivativeOfMemoryConsumptionMessageProcessor);
+
+		predictedMemoryConsumptionMessageProcessor = new PredictedMemoryConsumptionMessageProcessor();
+		add(predictedMemoryConsumptionMessageProcessor);
+		predictedLoadAverageMessageProcessor = new PredictedLoadAverageMessageProcessor();
+		add(predictedLoadAverageMessageProcessor);
+		predictedRequestInFlightMessageProcessor = new PredictedRequestInFlightMessageProcessor();
+		add(predictedRequestInFlightMessageProcessor);
+
+		memberPredictedLoadAverageMessageProcessor=new MemberPredictedLoadAverageMessageProcessor();
+		add(memberPredictedLoadAverageMessageProcessor);
+		memberPredictedMemoryConsumptionMessageProcessor=new MemberPredictedMemoryConsumptionMessageProcessor();
+		add(memberPredictedMemoryConsumptionMessageProcessor);
+
+
+		memberFaultMessageProcessor = new MemberFaultMessageProcessor();
+		add(memberFaultMessageProcessor);
+	}
+
+	public void addEventListener(EventListener eventListener) {
+
+		if (eventListener instanceof AverageLoadAverageEventListener) {
+			averageLoadAverageMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof AverageMemoryConsumptionEventListener) {
+			averageMemoryConsumptionMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof AverageRequestsInFlightEventListener) {
+			averageRequestsInFlightMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof AverageRequestsServingCapabilityEventListener) {
+			averageRequestsServingCapabilityMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof GradientOfLoadAverageEventListener) {
+			gradientOfLoadAverageMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof GradientOfMemoryConsumptionEventListener) {
+			gradientOfMemoryConsumptionMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof GradientOfRequestsInFlightEventListener) {
+			gradientOfRequestsInFlightMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof MemberAverageLoadAverageEventListener) {
+			memberAverageLoadAverageMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof MemberAverageMemoryConsumptionEventListener) {
+			memberAverageMemoryConsumptionMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof MemberFaultEventListener) {
+			memberFaultMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof MemberGradientOfLoadAverageEventListener) {
+			memberGradientOfLoadAverageMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof MemberGradientOfMemoryConsumptionEventListener) {
+			memberGradientOfMemoryConsumptionMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof MemberSecondDerivativeOfLoadAverageEventListener) {
+			memberSecondDerivativeOfLoadAverageMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof MemberSecondDerivativeOfMemoryConsumptionEventListener) {
+			memberSecondDerivativeOfMemoryConsumptionMessageProcessor
+					.addEventListener(eventListener);
+		} else if (eventListener instanceof SecondDerivativeOfLoadAverageEventListener) {
+			secondDerivativeOfLoadAverageMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof SecondDerivativeOfMemoryConsumptionEventListener) {
+			secondDerivativeOfMemoryConsumptionMessageProcessor.addEventListener(eventListener);
+
+		} else if (eventListener instanceof SecondDerivativeOfRequestsInFlightEventListener) {
+			secondDerivativeOfRequestsInFlightMessageProcessor.addEventListener(eventListener);
+
+		} else if (eventListener instanceof PredictedMemoryConsumptionEventListener) {
+			predictedMemoryConsumptionMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof PredictedLoadAverageEventListener) {
+			predictedLoadAverageMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof PredictedRequestInFlightEventListener) {
+			predictedRequestInFlightMessageProcessor.addEventListener(eventListener);
+		}else if (eventListener instanceof MemberPredictedLoadAverageEventListener) {
+			memberPredictedLoadAverageMessageProcessor.addEventListener(eventListener);
+		} else if (eventListener instanceof MemberPredictedMemoryConsumptionEventListener) {
+			memberPredictedMemoryConsumptionMessageProcessor.addEventListener(eventListener);
+		}
+		else {
+			throw new RuntimeException("Unknown event listener");
+		}
+	}
 }

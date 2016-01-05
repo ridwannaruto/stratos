@@ -11,7 +11,7 @@ public class PredictedMemoryConsumptionMessageProcessor extends MessageProcessor
     private MessageProcessor nextProcessor;
 
     @Override
-    public void setNext(MessageProcessor nextProcessor) {
+    public void setNext(MessageProceshtsor nextProcessor) {
         this.nextProcessor = nextProcessor;
     }
 
