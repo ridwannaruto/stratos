@@ -20,4 +20,4 @@
 #
 # --------------------------------------------------------------
 
-echo "get weight $1/$2" | socat stdio $3
+echo "show stat" | sudo socat stdio $2 | grep $1 | awk -F "\"*,\"*" '{print $3}'
