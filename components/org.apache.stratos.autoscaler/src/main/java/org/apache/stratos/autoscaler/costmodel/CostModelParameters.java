@@ -3,7 +3,7 @@ package org.apache.stratos.autoscaler.costmodel;
 /**
  * Created by ridwan on 1/7/16.
  */
-public class GlobalParameters {
+public class CostModelParameters {
 
     public static final char PERF_MEASURE_TYPE_RIF = 'r';
     public static final char PERF_MEASURE_TYPE_MC = 'm';

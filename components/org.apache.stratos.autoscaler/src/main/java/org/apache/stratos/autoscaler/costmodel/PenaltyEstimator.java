@@ -6,7 +6,7 @@ import org.apache.stratos.autoscaler.costmodel.data.InstanceType;
 /**
  * Created by ridwan on 1/7/16.
  */
-public class Penalty {
+public class PenaltyEstimator {
 
     private float perInstanceCost;
     private float penaltyDuration;
@@ -15,9 +15,9 @@ public class Penalty {
     private static final double MANTISSA = 2.0;
     private static final double EXPONENT_FACTOR = 20.0;
 
-    public Penalty(String instanceType, float duration){
+    public PenaltyEstimator(InstanceType instanceType, float duration){
         this.penaltyDuration = duration;
-        this.instanceType = new InstanceType(instanceType);
+        this.instanceType = instanceType;
     }
 
     public float calculatePenaltyCost(PolynomialSplineFunction predictedPolynomial, int instanceCount, char type){
@@ -42,24 +42,24 @@ public class Penalty {
         float penaltyPercentage = 0;
         float totalResourcePower = 0;
         switch (type){
-            case GlobalParameters.PERF_MEASURE_TYPE_LA:
+            case CostModelParameters.PERF_MEASURE_TYPE_LA:
                 totalResourcePower = instanceType.getOptimumLoadAverage() * instanceCount;
                 break;
-            case GlobalParameters.PERF_MEASURE_TYPE_MC:
+            case CostModelParameters.PERF_MEASURE_TYPE_MC:
                 totalResourcePower = instanceType.getOptimumMemoryConsumption() * instanceCount;
                 break;
-            case GlobalParameters.PERF_MEASURE_TYPE_RIF:
+            case CostModelParameters.PERF_MEASURE_TYPE_RIF:
                 totalResourcePower = instanceType.getOptimumRequestCount() * instanceCount;
                 break;
         }
 
         int violatedPoints = 0;
 
-        for (double i=0; i<GlobalParameters.LIMIT_PREDICTION; i+= 0.1){
+        for (double i=0; i< CostModelParameters.LIMIT_PREDICTION; i+= 0.1){
             if (predictedPolynomial.value(i) > totalResourcePower)
                 violatedPoints++;
         }
-        penaltyPercentage = (float)violatedPoints/(GlobalParameters.LIMIT_PREDICTION * 10);
+        penaltyPercentage = (float)violatedPoints/(CostModelParameters.LIMIT_PREDICTION * 10);
         return penaltyPercentage;
     }
 

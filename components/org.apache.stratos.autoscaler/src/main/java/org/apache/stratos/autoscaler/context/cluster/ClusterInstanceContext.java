@@ -313,14 +313,14 @@ public class ClusterInstanceContext extends InstanceContext {
 
     public void setPredictedMemoryConsumption(double[] predictions) {
 
-        log.info("\n\n+++++ ClusterInstanceContext.setPredictedMemoryConsumption+++++\n"+predictions+"\n\n");
+        log.info("\n\n+++++ ClusterInstanceContext.setPredictedMemoryConsumption+++++\n" + predictions + "\n\n");
 
         memoryConsumption.setPredictions(predictions);
         predictedMemoryConsumptionReset = true;
         //Todo : add rest of the logic of handling synchronization between Other memory updates
     }
 
-    public double[] getPredictedMemoryConsumption(){
+    public double[] getMemoryConsumptionPredictedArray(){
         return memoryConsumption.getPredictions();
     }
     public void setPredictedLoadAverage(double[] predictions) {
@@ -332,7 +332,7 @@ public class ClusterInstanceContext extends InstanceContext {
         //Todo : add rest of the logic of handling synchronization between Other memory updates
     }
 
-    public double[] getPredictedLoadAverage(){
+    public double[] getLoadAveragePredictedArray(){
         return loadAverage.getPredictions();
     }
 
@@ -345,7 +345,7 @@ public class ClusterInstanceContext extends InstanceContext {
         //Todo : add rest of the logic of handling synchronization between Other memory updates
     }
 
-    public double[] getPredictedRequestInFlight(){
+    public double[] getRequestInFlightPredictedArray(){
         return requestsInFlight.getPredictions();
     }
 
