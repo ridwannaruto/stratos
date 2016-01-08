@@ -1,19 +1,19 @@
 package org.apache.stratos.autoscaler.costmodel;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-import org.apache.stratos.autoscaler.costmodel.data.InstanceType;
+import org.apache.stratos.autoscaler.costmodel.data.InstanceSpec;
 
 /**
  * Created by ridwan on 1/7/16.
  */
 public class PenaltyEstimator {
 
-    private InstanceType instanceType;
+    private InstanceSpec instanceType;
 
     private static final double MANTISSA = 2.0;
     private static final double EXPONENT_FACTOR = 20.0;
 
-    public PenaltyEstimator(InstanceType instanceType){
+    public PenaltyEstimator(InstanceSpec instanceType){
         this.instanceType = instanceType;
     }
 

@@ -1,17 +1,17 @@
 package org.apache.stratos.autoscaler.costmodel;
 
 import org.apache.commons.math3.analysis.polynomials.*;
-import org.apache.stratos.autoscaler.costmodel.data.InstanceType;
+import org.apache.stratos.autoscaler.costmodel.data.InstanceSpec;
 
 /**
  * Created by ridwan on 1/7/16.
  */
 public class PriceEstimator {
 
-    private InstanceType instanceType;
+    private InstanceSpec instanceType;
     private PenaltyEstimator penaltyEstimator;
-    public PriceEstimator(String instanceType){
-        this.instanceType = new InstanceType(instanceType);
+    public PriceEstimator(String instanceType, String regionName){
+        this.instanceType = new InstanceSpec(instanceType,regionName);
         penaltyEstimator = new PenaltyEstimator(this.instanceType);
     }
 

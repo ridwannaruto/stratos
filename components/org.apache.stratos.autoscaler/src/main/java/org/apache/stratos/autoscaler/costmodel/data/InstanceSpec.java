@@ -10,8 +10,11 @@ public class InstanceSpec {
     private float optimumRequestCount;
     private float optimumLoadAverage;
 
-    public InstanceSpec(String instanceType){
-
+    public InstanceSpec(String instanceType, String regionName){
+        this.optimumRequestCount = 100;
+        this.optimumLoadAverage = 1;
+        this.optimumMemoryConsumption = 1;
+        this.perInstanceCost = 0.02f;
     }
 
     public float getPerInstanceCost() {
