@@ -32,6 +32,10 @@ public class LoadAverage implements Serializable {
     private float gradient = 0.0f;
     private double [] predictions;
 
+    public double[] getPredictions() {
+        return predictions;
+    }
+
     /**
      * Gets the value of the average property.
      */
