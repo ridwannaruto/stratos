@@ -67,14 +67,13 @@ public class RuleTasksDelegator {
         return predictedValue;
     }
 
-    private String getInstanceType(String clusterId){
+    private IaasProvider getIaaSProvider(String clusterId){
         MemberContext memberContext = CloudControllerContext.getInstance().getMemberContextsOfClusterId(clusterId).get(0);
         String cartridgeType = memberContext.getCartridgeType();
         Cartridge cartridge = CloudControllerContext.getInstance().getCartridge(cartridgeType);
         IaasProvider iaasProvider = CloudControllerContext.getInstance().getIaasProviderOfPartition(
                 cartridge.getType(), memberContext.getPartition().getId());
-        String instanceType = iaasProvider.getProperty(CloudControllerConstants.INSTANCE_TYPE);
-        return instanceType;
+        return iaasProvider;
     }
 
 
@@ -86,8 +85,9 @@ public class RuleTasksDelegator {
             index[i] = i;
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
-        String instanceType = getInstanceType(clusterId);
-        PriceEstimator priceEstimator = new PriceEstimator(instanceType);
+        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnLA(polynomial,i);
             if (cost < minimumCost){
@@ -107,8 +107,9 @@ public class RuleTasksDelegator {
             index[i] = i;
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
-        String instanceType = getInstanceType(clusterId);
-        PriceEstimator priceEstimator = new PriceEstimator(instanceType);
+        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnMC(polynomial,i);
             if (cost < minimumCost){
@@ -128,8 +129,9 @@ public class RuleTasksDelegator {
             index[i] = i;
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
-        String instanceType = getInstanceType(clusterId);
-        PriceEstimator priceEstimator = new PriceEstimator(instanceType);
+        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnRIF(polynomial,i);
             if (cost < minimumCost){

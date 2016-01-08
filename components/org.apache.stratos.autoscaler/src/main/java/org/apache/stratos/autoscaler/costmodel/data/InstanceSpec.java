@@ -3,14 +3,14 @@ package org.apache.stratos.autoscaler.costmodel.data;
 /**
  * Created by ridwan on 1/7/16.
  */
-public class InstanceType {
+public class InstanceSpec {
 
     private float perInstanceCost;
     private float optimumMemoryConsumption;
     private float optimumRequestCount;
     private float optimumLoadAverage;
 
-    public InstanceType(String instanceType){
+    public InstanceSpec(String instanceType){
 
     }
 
