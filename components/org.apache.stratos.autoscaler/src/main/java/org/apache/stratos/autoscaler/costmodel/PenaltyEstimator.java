@@ -8,15 +8,12 @@ import org.apache.stratos.autoscaler.costmodel.data.InstanceType;
  */
 public class PenaltyEstimator {
 
-    private float perInstanceCost;
-    private float penaltyDuration;
     private InstanceType instanceType;
 
     private static final double MANTISSA = 2.0;
     private static final double EXPONENT_FACTOR = 20.0;
 
-    public PenaltyEstimator(InstanceType instanceType, float duration){
-        this.penaltyDuration = duration;
+    public PenaltyEstimator(InstanceType instanceType){
         this.instanceType = instanceType;
     }
 
