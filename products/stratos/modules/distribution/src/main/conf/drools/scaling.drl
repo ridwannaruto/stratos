@@ -75,8 +75,8 @@ dialect "mvel"
         rifAverage : Float() from  clusterInstanceContext.getAverageRequestsInFlight()
         rifGradient : Float() from  clusterInstanceContext.getRequestsInFlightGradient()
         rifSecondDerivative : Float() from  clusterInstanceContext.getRequestsInFlightSecondDerivative()
-          rifPredictedValue : Double() from delegator.getPredictedValueForNextMinute(rifAverage, rifGradient, rifSecondDerivative, 1)
-
+        rifPredictedValue : Double() from delegator.getPredictedValueForNextMinute(rifAverage, rifGradient, rifSecondDerivative, 1)
+        rifPredictedArray: double[] from clusterInstanceContext.getRequestInFlightPredictedArray()
         // --- LA, MC and RIF parameters from CEP
         laAverage : Float() from clusterInstanceContext.getAverageLoadAverage()
         laGradient : Float() from clusterInstanceContext.getLoadAverageGradient()
@@ -88,12 +88,12 @@ dialect "mvel"
         // ---
 
         mcThreshold : Float() from  loadThresholds.getMemoryConsumptionThreshold()
-
         mcPredictedValue : Double() from delegator.getMemoryConsumptionPredictedValue(clusterInstanceContext)
+        mcPredictedArray : double[] from clusterInstanceContext.getMemoryConsumptionPredictedArray()
 
         laThreshold : Float() from  loadThresholds.getLoadAverageThreshold()
-
         laPredictedValue : Double() from delegator.getLoadAveragePredictedValue(clusterInstanceContext)
+        laPredictedArray : double[] from clusterInstanceContext.getLoadAveragePredictedArray()
 
         activeInstancesCount : Integer() from clusterInstanceContext.getActiveMemberCount()
         maxInstancesCount : Integer() from clusterInstanceContext.getMaxInstanceCount()
@@ -107,6 +107,7 @@ dialect "mvel"
         eval(log.debug("HealthStatProc rif " + clusterId + " " + clusterInstanceContext.getId() + " " + rifAverage + " " + rifGradient + " " + rifSecondDerivative));
         eval(log.debug("HealthStatProc count " + clusterId + " " + clusterInstanceContext.getId() + " " + activeInstancesCount));
         // ---
+        /*
 
         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getNumberOfInstancesRequiredBasedOnRif(
             rifPredictedValue, rifThreshold)
@@ -116,9 +117,23 @@ dialect "mvel"
         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from
             delegator.getNumberOfInstancesRequiredBasedOnLoadAverage(laThreshold, laPredictedValue, minInstancesCount)
 
+
+
         numberOfRequiredInstances : Integer() from delegator.getMaxNumberOfInstancesRequired(
             numberOfInstancesReuquiredBasedOnRif, numberOfInstancesReuquiredBasedOnMemoryConsumption, mcReset,
             numberOfInstancesReuquiredBasedOnLoadAverage, laReset)
+
+        */
+
+         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getNumberOfInstancesRequiredBasedOnRif(rifPredictedArray,minInstancesCount,maxInstancesCount)
+         numberOfInstancesReuquiredBasedOnMemoryConsumption : Integer() from delegator.getNumberOfInstancesRequiredBasedOnMemoryConsumption(mcPredictedArray,minInstancesCount,maxInstancesCount)
+         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from delegator.getNumberOfInstancesRequiredBasedOnLoadAverage(laPredictedArray, minInstancesCount, maxInstancesCount)
+
+
+
+                numberOfRequiredInstances : Integer() from delegator.getMaxNumberOfInstancesRequired(
+                    numberOfInstancesReuquiredBasedOnRif, numberOfInstancesReuquiredBasedOnMemoryConsumption, mcReset,
+                    numberOfInstancesReuquiredBasedOnLoadAverage, laReset)
 
         scaleUp : Boolean() from (activeInstancesCount < numberOfRequiredInstances)
         scaleDown : Boolean() from (activeInstancesCount > numberOfRequiredInstances || (numberOfRequiredInstances == 1 && activeInstancesCount == 1))
