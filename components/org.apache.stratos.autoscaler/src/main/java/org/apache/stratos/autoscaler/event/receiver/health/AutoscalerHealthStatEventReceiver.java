@@ -79,6 +79,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("la", "s", clusterId, averageLoadAverageEvent.getClusterInstanceId(),
+                        averageLoadAverageEvent.getValue());
                 monitor.handleAverageLoadAverageEvent(averageLoadAverageEvent);
             }
 
@@ -99,6 +101,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("mc", "s", clusterId, averageMemoryConsumptionEvent.getClusterInstanceId(),
+                        averageMemoryConsumptionEvent.getValue());
                 monitor.handleAverageMemoryConsumptionEvent(averageMemoryConsumptionEvent);
             }
         });
@@ -118,6 +122,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("rif", "s", clusterId, averageRequestsInFlightEvent.getClusterInstanceId(),
+                        averageRequestsInFlightEvent.getValue());
                 monitor.handleAverageRequestsInFlightEvent(averageRequestsInFlightEvent);
             }
         });
@@ -159,6 +165,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("la", "u", clusterId, gradientOfLoadAverageEvent.getClusterInstanceId(),
+                        gradientOfLoadAverageEvent.getValue());
                 monitor.handleGradientOfLoadAverageEvent(gradientOfLoadAverageEvent);
             }
         });
@@ -178,6 +186,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("mc", "u", clusterId, gradientOfMemoryConsumptionEvent.getClusterInstanceId(),
+                        gradientOfMemoryConsumptionEvent.getValue());
                 monitor.handleGradientOfMemoryConsumptionEvent(gradientOfMemoryConsumptionEvent);
             }
         });
@@ -197,6 +207,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("rif", "u", clusterId, gradientOfRequestsInFlightEvent.getClusterInstanceId(),
+                        gradientOfRequestsInFlightEvent.getValue());
                 monitor.handleGradientOfRequestsInFlightEvent(gradientOfRequestsInFlightEvent);
             }
         });
@@ -421,6 +433,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("la", "a", clusterId, secondDerivativeOfLoadAverageEvent.getClusterInstanceId(),
+                        secondDerivativeOfLoadAverageEvent.getValue());
                 monitor.handleSecondDerivativeOfLoadAverageEvent(secondDerivativeOfLoadAverageEvent);
             }
         });
@@ -440,6 +454,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("mc", "a", clusterId, secondDerivativeOfMemoryConsumptionEvent.getClusterInstanceId(),
+                        secondDerivativeOfMemoryConsumptionEvent.getValue());
                 monitor.handleSecondDerivativeOfMemoryConsumptionEvent(secondDerivativeOfMemoryConsumptionEvent);
             }
         });
@@ -456,10 +472,12 @@ public class AutoscalerHealthStatEventReceiver {
                 if (null == monitor) {
                     if (log.isDebugEnabled()) {
                         log.debug(String.format("A cluster monitor is not found in autoscaler context "
-                                + "[cluster] %s", clusterId));
+                                 + "[cluster] %s", clusterId));
                     }
                     return;
                 }
+                logStat("rif", "a", clusterId, secondDerivativeOfRequestsInFlightEvent.getClusterInstanceId(),
+                        secondDerivativeOfRequestsInFlightEvent.getValue());
                 monitor.handleSecondDerivativeOfRequestsInFlightEvent(secondDerivativeOfRequestsInFlightEvent);
             }
         });
@@ -483,6 +501,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("mc", "pred", clusterId, predictedMemoryConsumptionEvent.getClusterInstanceId(),
+                        predictedMemoryConsumptionEvent.getValue());
                 monitor.handlePredictedMemoryConsumptionEvent(predictedMemoryConsumptionEvent);
             }
         });
@@ -508,6 +528,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("la", "pred", clusterId, predictedLoadAverageEvent.getClusterInstanceId(),
+                        predictedLoadAverageEvent.getValue());
                 monitor.handlePredictedLoadAverageEvent(predictedLoadAverageEvent);
             }
         });
@@ -532,6 +554,8 @@ public class AutoscalerHealthStatEventReceiver {
                     }
                     return;
                 }
+                logStat("rif", "pred", clusterId, predictedRequestsInFlightEvent.getClusterInstanceId(),
+                        predictedRequestsInFlightEvent.getValue());
                 monitor.handlePredictedRequestInFlightEvent(predictedRequestsInFlightEvent);
             }
         });
@@ -552,6 +576,10 @@ public class AutoscalerHealthStatEventReceiver {
         } finally {
             TopologyManager.releaseReadLock();
         }
+    }
+
+    private void logStat(String metric, String parameter, String clusterId, String clusterInstanceId, double value) {
+        log.debug(String.format("HealthStatEvent %s %s %s %s %f", metric, parameter, clusterId, clusterInstanceId, value));
     }
 
     public void terminate() {
