@@ -34,6 +34,10 @@ public class RequestsInFlight implements Serializable {
     private float scaleDownMarginOfSecondDerivative;
     private double [] predictions;
 
+    public double[] getPredictions() {
+        return predictions;
+    }
+
     public void setPredictions(double[] predictions) {
         this.predictions = predictions;
     }

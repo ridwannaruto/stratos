@@ -33,6 +33,11 @@ public class MemoryConsumption implements Serializable {
     private float gradient = 0.0f;
     private double [] predictions;
 
+    public double[] getPredictions() {
+        return predictions;
+    }
+
+
     public void setPredictions(double[] predictions) {
 
         this.predictions = new double[predictions.length];

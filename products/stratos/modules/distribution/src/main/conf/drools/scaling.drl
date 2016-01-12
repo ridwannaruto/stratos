@@ -39,12 +39,13 @@ import org.apache.stratos.autoscaler.rule.AutoscalerRuleEvaluator;
 import org.apache.stratos.cloud.controller.stub.domain.Partition;
 import org.apache.stratos.cloud.controller.stub.domain.MemberContext;
 import org.apache.stratos.autoscaler.context.cluster.ClusterInstanceContext;
+import java.util.TreeMap;
 import java.util.UUID;
 import org.apache.stratos.autoscaler.statistics.publisher.ScalingDecisionPublisher;
 import org.apache.stratos.autoscaler.statistics.publisher.AutoscalerPublisherFactory;
 import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
-import org.apache.stratos.autoscaler.pojo.policy.autoscale.LoadAverage
-import org.apache.stratos.autoscaler.pojo.policy.autoscale.MemoryConsumption
+import org.apache.stratos.autoscaler.pojo.policy.autoscale.LoadAverage;
+import org.apache.stratos.autoscaler.pojo.policy.autoscale.MemoryConsumption;
 
 global org.apache.stratos.autoscaler.rule.RuleLog log;
 global org.apache.stratos.autoscaler.rule.RuleTasksDelegator delegator;
@@ -57,56 +58,61 @@ global java.lang.Boolean laReset;
 global java.lang.Boolean arspiReset;
 global java.lang.String algorithmName;
 
+
 rule "Scaling Rule"
 dialect "mvel"
     when
         clusterInstanceContext : ClusterInstanceContext ()
 
-        loadThresholds : LoadThresholds() from  autoscalePolicy.getLoadThresholds()
-        partitionAlgorithm : PartitionAlgorithm() from  delegator.getPartitionAlgorithm(algorithmName)
+        loadThresholds : LoadThresholds() from autoscalePolicy.getLoadThresholds()
+        partitionAlgorithm : PartitionAlgorithm() from delegator.getPartitionAlgorithm(algorithmName)
 
         eval(log.debug("Running scale up rule: [network-partition] " + clusterInstanceContext.getNetworkPartitionId() +
             " [cluster] " + clusterId))
         eval(log.debug("[scaling] [network-partition] " + clusterInstanceContext.getNetworkPartitionId() + " [cluster] "
             + clusterId + " Algorithm name: " + algorithmName))
 
-        rifThreshold : Float() from  loadThresholds.getRequestsInFlightThreshold()
+        rifThreshold : Float() from loadThresholds.getRequestsInFlightThreshold()
 
         rifAverage : Float() from  clusterInstanceContext.getAverageRequestsInFlight()
         rifGradient : Float() from  clusterInstanceContext.getRequestsInFlightGradient()
         rifSecondDerivative : Float() from  clusterInstanceContext.getRequestsInFlightSecondDerivative()
-          rifPredictedValue : Double() from delegator.getPredictedValueForNextMinute(rifAverage, rifGradient, rifSecondDerivative, 1)
+        rifPredictedValue : Double() from delegator.getPredictedValueForNextMinute(rifAverage, rifGradient, rifSecondDerivative, 1)
+        rifPredictedArray: double[] from clusterInstanceContext.getRequestInFlightPredictedArray()
 
         // --- LA, MC and RIF parameters from CEP
         laAverage : Float() from clusterInstanceContext.getAverageLoadAverage()
         laGradient : Float() from clusterInstanceContext.getLoadAverageGradient()
         laSecondDerivative : Float() from clusterInstanceContext.getLoadAverageSecondDerivative()
-
+        
         mcAverage : Float() from clusterInstanceContext.getAverageMemoryConsumption()
         mcGradient : Float() from clusterInstanceContext.getMemoryConsumptionGradient()
         mcSecondDerivative : Float() from clusterInstanceContext.getMemoryConsumptionSecondDerivative()
         // ---
 
-        mcThreshold : Float() from  loadThresholds.getMemoryConsumptionThreshold()
+        mcThreshold : Float() from loadThresholds.getMemoryConsumptionThreshold()
 
         mcPredictedValue : Double() from delegator.getMemoryConsumptionPredictedValue(clusterInstanceContext)
+        mcPredictedArray : double[] from clusterInstanceContext.getMemoryConsumptionPredictedArray()
 
-        laThreshold : Float() from  loadThresholds.getLoadAverageThreshold()
+        laThreshold : Float() from loadThresholds.getLoadAverageThreshold()
 
         laPredictedValue : Double() from delegator.getLoadAveragePredictedValue(clusterInstanceContext)
+        laPredictedArray : double[] from clusterInstanceContext.getLoadAveragePredictedArray()
 
         activeInstancesCount : Integer() from clusterInstanceContext.getActiveMemberCount()
         maxInstancesCount : Integer() from clusterInstanceContext.getMaxInstanceCount()
         minInstancesCount : Integer() from clusterInstanceContext.getMinInstanceCount()
-        requestsServedPerInstance : Float() from  clusterInstanceContext.getRequestsServedPerInstance()
-        averageRequestsServedPerInstance : Float() from  clusterInstanceContext.getAverageRequestsServedPerInstance()
-
+        requestsServedPerInstance : Float() from clusterInstanceContext.getRequestsServedPerInstance()
+        averageRequestsServedPerInstance : Float() from clusterInstanceContext.getAverageRequestsServedPerInstance()
+        
         // ---
-        eval(log.debug("HealthStatProc la " + clusterId + " " + clusterInstanceContext.getId() + " " + laAverage + " " + laGradient + " " + laSecondDerivative))
-        eval(log.debug("HealthStatProc mc " + clusterId + " " + clusterInstanceContext.getId() + " " + mcAverage + " " + mcGradient + " " + mcSecondDerivative))
-        eval(log.debug("HealthStatProc rif " + clusterId + " " + clusterInstanceContext.getId() + " " + rifAverage + " " + rifGradient + " " + rifSecondDerivative));
+        eval(log.debug("HealthStatProc la " + clusterId + " " + clusterInstanceContext.getId() + " " + laAverage + " " + laGradient + " " + laSecondDerivative + " " + laPredictedValue))
+        eval(log.debug("HealthStatProc mc " + clusterId + " " + clusterInstanceContext.getId() + " " + mcAverage + " " + mcGradient + " " + mcSecondDerivative + " " + mcPredictedValue))
+        eval(log.debug("HealthStatProc rif " + clusterId + " " + clusterInstanceContext.getId() + " " + rifAverage + " " + rifGradient + " " + rifSecondDerivative + " " + rifPredictedValue));
         eval(log.debug("HealthStatProc count " + clusterId + " " + clusterInstanceContext.getId() + " " + activeInstancesCount));
         // ---
+        /*
 
         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getNumberOfInstancesRequiredBasedOnRif(
             rifPredictedValue, rifThreshold)
@@ -116,13 +122,27 @@ dialect "mvel"
         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from
             delegator.getNumberOfInstancesRequiredBasedOnLoadAverage(laThreshold, laPredictedValue, minInstancesCount)
 
+
+
         numberOfRequiredInstances : Integer() from delegator.getMaxNumberOfInstancesRequired(
             numberOfInstancesReuquiredBasedOnRif, numberOfInstancesReuquiredBasedOnMemoryConsumption, mcReset,
             numberOfInstancesReuquiredBasedOnLoadAverage, laReset)
 
+        */
+
+         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getNumberOfInstancesRequiredBasedOnRif(rifPredictedArray,minInstancesCount,maxInstancesCount)
+         numberOfInstancesReuquiredBasedOnMemoryConsumption : Integer() from delegator.getNumberOfInstancesRequiredBasedOnMemoryConsumption(mcPredictedArray,minInstancesCount,maxInstancesCount)
+         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from delegator.getNumberOfInstancesRequiredBasedOnLoadAverage(laPredictedArray, minInstancesCount, maxInstancesCount)
+
+
+
+                numberOfRequiredInstances : Integer() from delegator.getMaxNumberOfInstancesRequired(
+                    numberOfInstancesReuquiredBasedOnRif, numberOfInstancesReuquiredBasedOnMemoryConsumption, mcReset,
+                    numberOfInstancesReuquiredBasedOnLoadAverage, laReset)
+
         scaleUp : Boolean() from (activeInstancesCount < numberOfRequiredInstances)
         scaleDown : Boolean() from (activeInstancesCount > numberOfRequiredInstances || (numberOfRequiredInstances == 1 && activeInstancesCount == 1))
-
+        
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF Resetted?: " + rifReset))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF predicted value: " + rifPredictedValue))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF threshold: " + rifThreshold))
@@ -142,13 +162,12 @@ dialect "mvel"
           for(MemberContext memberContext: partitionContext.getActiveMembers()) {
               String memberId = memberContext.getMemberId();
               MemberStatsContext stats = partitionContext.getMemberStatsContext(memberId);
-                  log.debug("HealthStatProc member " + memberId + " " + memberContext.getInitTime() + " " + 
+                  log.debug("HealthStatProc member " + clusterId + " " + memberId + " " + memberContext.getInitTime() + " " + 
                         stats.getAverageLoadAverage() + " " + stats.getGradientOfLoadAverage() + " " + stats.getSecondDerivativeOfLoadAverage() + " " + 
                         stats.getAverageMemoryConsumption() + " " + stats.getGradientOfMemoryConsumption() + " " + stats.getSecondDerivativeOfMemoryConsumption());
           }
         }
         // ---
-
         log.debug("[scaling] Number of required instances based on stats: " + numberOfRequiredInstances + " " +
             "[active instances count] " + activeInstancesCount + " [network-partition] " +
             clusterInstanceContext.getNetworkPartitionId() + " [cluster] " + clusterId);
@@ -165,7 +184,7 @@ dialect "mvel"
                     additionalInstances = clusterMaxMembers - nonTerminatedMembers;
                     log.info("[scale-up] Required member count based on stat based scaling is higher than max, hence"
                             + " notifying to parent for possible group scaling or app bursting. [cluster] " + clusterId
-                            + " [instance id]" + clusterInstanceContext.getId() + " [max] " + clusterMaxMembers
+                            + " [instance id] " + clusterInstanceContext.getId() + " [max] " + clusterMaxMembers
                             + " [number of required instances] " + numberOfRequiredInstances
                             + " [additional instances to be created] " + additionalInstances);
                     delegator.delegateScalingOverMaxNotification(clusterId, clusterInstanceContext.getNetworkPartitionId(),
@@ -196,27 +215,27 @@ dialect "mvel"
                     if (scalingDecisionPublisher.isEnabled()) {
                         log.debug("Publishing scaling decision to DAS");
                         scalingDecisionPublisher.publish(scalingTime, scalingDecisionId, clusterId,
-                                            minInstancesCount, maxInstancesCount,
-                                            rifPredictedValue, rifThreshold, numberOfInstancesReuquiredBasedOnRif,
-                                            mcPredictedValue, mcThreshold, numberOfInstancesReuquiredBasedOnMemoryConsumption,
-                                            laPredictedValue, laThreshold, numberOfInstancesReuquiredBasedOnLoadAverage,
-                                            numberOfRequiredInstances, activeInstancesCount,
-                                            additionalInstances, scalingReason);
+                            minInstancesCount, maxInstancesCount,
+                            rifPredictedValue, rifThreshold, numberOfInstancesReuquiredBasedOnRif,
+                            mcPredictedValue, mcThreshold, numberOfInstancesReuquiredBasedOnMemoryConsumption,
+                            laPredictedValue, laThreshold, numberOfInstancesReuquiredBasedOnLoadAverage,
+                            numberOfRequiredInstances, activeInstancesCount,
+                            additionalInstances, scalingReason);
                     } else {
                         log.warn("Scaling decision publisher is not enabled");
                     }
 
-                        boolean scaleUpDueToRIF = rifReset && rifPredictedValue > rifThreshold;
-                        boolean scaleUpDueToMC = mcReset && mcPredictedValue > mcThreshold;
-                        boolean scaleUpDueToLA = laReset && laPredictedValue > laThreshold;
+                    boolean scaleUpDueToRIF = rifReset && rifPredictedValue > rifThreshold;
+                    boolean scaleUpDueToMC = mcReset && mcPredictedValue > mcThreshold;
+                    boolean scaleUpDueToLA = laReset && laPredictedValue > laThreshold;
 
                     while(count != additionalInstances && partitionsAvailable){
 
                         ClusterLevelPartitionContext partitionContext = (ClusterLevelPartitionContext) partitionAlgorithm.getNextScaleUpPartitionContext(clusterInstanceContext.getPartitionCtxtsAsAnArray());
                         if(partitionContext != null){
-                                                        // ---
-                                                        log.debug("HealthStatProc +" + (scaleUpDueToRIF ? " rif" : "") + (scaleUpDueToMC ? " mc" : "") + (scaleUpDueToLA ? " la" : ""));
-                                                        // ---
+                            // ---
+                            log.debug("HealthStatProc + " + clusterId + (scaleUpDueToRIF ? " rif" : "") + (scaleUpDueToMC ? " mc" : "") + (scaleUpDueToLA ? " la" : ""));
+                            // ---
                             log.info("[scale-up] Partition available, hence trying to spawn an instance to scale up! " +
                                 " [application id] " + applicationId +
                                 " [cluster] " + clusterId + " [instance id] " + clusterInstanceContext.getId() +
@@ -243,18 +262,26 @@ dialect "mvel"
                     }
                 }
             } else {
-                log.info("[scale-up] Trying to scale up over max, hence not scaling up cluster itself and
-                        notifying to parent for possible group scaling or app bursting.
-                        [cluster] " + clusterId + " [instance id]" + clusterInstanceContext.getId() +
-                        " [max] " + clusterMaxMembers);
+                log.info("[scale-up] Trying to scale up over max, hence not scaling up cluster itself and notifying " +
+                    "to parent for possible group scaling or app bursting. [cluster] " + clusterId + " [instance id] " +
+                    clusterInstanceContext.getId() + " [max] " + clusterMaxMembers);
                 delegator.delegateScalingOverMaxNotification(clusterId, clusterInstanceContext.getNetworkPartitionId(),
                     clusterInstanceContext.getId());
             }
         } else if(scaleDown){
 
+            int ONE_MINUTE = 60000;    // milliseconds
+            int BILLING_CYCLE = 60;    // 60 minutes
+            int MIN_MINUTES_BEFORE_KILL = 50; // don't kill if less than this # minutes of last hour is spent
+            double CRITICAL_LOAD = 50.0;      // determining factor for low/high load
+            int LOW_LOAD_KILL_TIME = 3;  // allow 3 minutes for graceful kill
+            int HIGH_LOAD_KILL_TIME = 5;  // allow 5 minutes for graceful kill
+
             if(nonTerminatedMembers > clusterInstanceContext.getMinInstanceCount){
 
                 log.debug("[scale-down] Decided to Scale down [cluster] " + clusterId);
+
+                // TODO will this cause problems? e.g. scale down event at 57th minute ignored?
                 if(clusterInstanceContext.getScaleDownRequestsCount() > 2 ){
 
                     log.debug("[scale-down] Reached scale down requests threshold [cluster] " + clusterId + " Count " +
@@ -262,7 +289,7 @@ dialect "mvel"
 
                     if(clusterInstanceContext.hasScalingDependants()) {
 
-                        log.debug("[scale-up] Notifying dependencies [cluster] " + clusterId);
+                        log.debug("[scale-down] Notifying dependencies [cluster] " + clusterId);
                         delegator.delegateScalingDependencyNotification(clusterId, clusterInstanceContext.getNetworkPartitionId(),
                             clusterInstanceContext.getId(), numberOfRequiredInstances, clusterInstanceContext.getMinInstanceCount());
                     } else{
@@ -271,9 +298,6 @@ dialect "mvel"
                         boolean scaleDownDueToMC = mcReset && mcPredictedValue < mcThreshold;
                         boolean scaleDownDueToLA = laReset && laPredictedValue < laThreshold;
 
-                        MemberStatsContext selectedMemberStatsContext = null;
-                        double lowestOverallLoad = 0.0;
-                        boolean foundAValue = false;
                         ClusterLevelPartitionContext partitionContext = (ClusterLevelPartitionContext) partitionAlgorithm.getNextScaleDownPartitionContext(clusterInstanceContext.getPartitionCtxtsAsAnArray());
                         if(partitionContext != null){
                             log.info("[scale-down] Partition available to scale down " +
@@ -289,49 +313,56 @@ dialect "mvel"
                                 " [laPredictedValue] " + laPredictedValue + " [laThreshold] " + laThreshold
                             );
 
-                            for(MemberStatsContext memberStatsContext: partitionContext.getMemberStatsContexts().values()){
+                            long now = System.currentTimeMillis();
+                            TreeMap candidates = new TreeMap();
+
+                            for (MemberContext member: partitionContext.getActiveMembers()) {
+                                String memberId = member.getMemberId();
+                                String partitionId = partitionContext.getPartitionId();
+                                MemberStatsContext memberStatsContext = partitionContext.getPartitionCtxt(memberId);
+
                                 LoadAverage loadAverage = memberStatsContext.getLoadAverage();
-                                log.debug("[scale-down] " + " [cluster] "
-                                    + clusterId + " [member] " + memberStatsContext.getMemberId() + " Load average: " + loadAverage);
+                                log.debug("[scale-down]  [partition] " + partitionId + " [cluster] " + clusterId + " [member] " + memberId + " Load average: " + loadAverage);
 
                                 MemoryConsumption memoryConsumption = memberStatsContext.getMemoryConsumption();
-                                log.debug("[scale-down] " + " [partition] " + partitionContext.getPartitionId() + " [cluster] "
-                                    + clusterId + " [member] " + memberStatsContext.getMemberId() + " Memory consumption: " +
-                                    memoryConsumption);
+                                log.debug("[scale-down]  [partition] " + partitionId + " [cluster] " + clusterId + " [member] " + memberId + " Memory consumption: " + memoryConsumption);
 
                                 double predictedCpu = delegator.getPredictedValueForNextMinute(loadAverage.getAverage(),
                                     loadAverage.getGradient(),loadAverage.getSecondDerivative(), 1);
-                                log.debug("[scale-down] " + " [partition] " + partitionContext.getPartitionId() + " [cluster] "
-                                    + clusterId + " [member] " + memberStatsContext.getMemberId() + " Predicted CPU: " + predictedCpu);
+                                log.debug("[scale-down]  [partition] " + partitionId + " [cluster] " + clusterId + " [member] " + memberId + " Predicted CPU: " + predictedCpu);
 
                                 double predictedMemoryConsumption = delegator.getPredictedValueForNextMinute(
                                     memoryConsumption.getAverage(),memoryConsumption.getGradient(),memoryConsumption.getSecondDerivative(), 1);
-                                log.debug("[scale-down] " + " [partition] " + partitionContext.getPartitionId() + " [cluster] "
-                                    + clusterId + " [member] " + memberStatsContext.getMemberId() + " Predicted memory consumption: " +
-                                        predictedMemoryConsumption);
+                                log.debug("[scale-down]  [partition] " + partitionId + " [cluster] " + clusterId + " [member] " + memberId + " Predicted memory consumption: " + predictedMemoryConsumption);
 
                                 double overallLoad = (predictedCpu + predictedMemoryConsumption) / 2;
-                                log.debug("[scale-down] " + " [partition] " + partitionContext.getPartitionId() + " [cluster] "
-                                    + clusterId + " [member] " + memberStatsContext.getMemberId() + " Overall load: " + overallLoad);
+                                log.debug("[scale-down]  [partition] " + partitionId + " [cluster] " + clusterId + " [member] " + memberId + " Overall load: " + overallLoad);
 
-                                if(!foundAValue){
-                                    foundAValue = true;
-                                    selectedMemberStatsContext = memberStatsContext;
-                                    lowestOverallLoad = overallLoad;
-                                } else if(overallLoad < lowestOverallLoad){
-                                    selectedMemberStatsContext = memberStatsContext;
-                                    lowestOverallLoad = overallLoad;
+                                long initTime = member.getInitTime();
+                                long minutesToNextCycle = BILLING_CYCLE - ((now - initTime) / ONE_MINUTE) % BILLING_CYCLE;
+                                log.debug("[scale-down]  [partition] " + partitionId + " [cluster] " + clusterId + " [member] " + memberId + " Minutes to next cycle: " + minutesToNextCycle);
+
+                                int killDelay = overallLoad < CRITICAL_LOAD ? LOW_LOAD_KILL_TIME : HIGH_LOAD_KILL_TIME;
+
+                                // ignore if member not in termination time range,
+                                // or if no sufficient time to kill safely (based on load level)
+                                if (minutesToNextCycle <= BILLING_CYCLE - MIN_MINUTES_BEFORE_KILL && minutesToNextCycle >= killDelay) {
+                                    candidates.put(minutesToNextCycle, memberId);
+                                    log.debug("[scale-down] added candidate [member] " + memberId);
                                 }
                             }
-                            if(selectedMemberStatsContext != null) {
-                                // ---
-                                log.debug("HealthStatProc - " + selectedMemberStatsContext.getMemberId() + (scaleDownDueToRIF ? " rif" : "") + (scaleDownDueToMC ? " mc" : "") + (scaleDownDueToLA ? " la" : ""));
-                                // ---
-                                log.info("[scale-down] Trying to terminating an instace to scale down!" );
-                                log.debug("[scale-down] " + " [partition] " + partitionContext.getPartitionId() + " [cluster] "
-                                    + clusterId + " Member with lowest overall load: " + selectedMemberStatsContext.getMemberId());
 
-                                delegator.delegateTerminate(partitionContext, selectedMemberStatsContext.getMemberId());
+                            if (candidates.size() > 0) {
+                                String memberId = candidates.firstEntry().getValue();  // has least remaining time
+                                // ---
+                                log.debug("HealthStatProc - " + clusterId + " " + memberId + (scaleDownDueToRIF ? " rif" : "") + (scaleDownDueToMC ? " mc" : "") + (scaleDownDueToLA ? " la" : ""));
+                                // ---
+                                log.info("[scale-down] Trying to terminate an instance to scale down!" );
+                                log.debug("[scale-down]  [partition] " + partitionContext.getPartitionId() + " [cluster] " + clusterId + " Member with suitable load-cycle time combination: " + memberId);
+
+                                delegator.delegateTerminate(partitionContext, memberId);
+                            } else {
+                                log.info("[scale-down] No suitable scale down candidates found" );
                             }
                         }
                     }
@@ -342,16 +373,18 @@ dialect "mvel"
 
                 }
             } else {
-                log.debug("[scale-down] Min is reached, hence not scaling down [cluster] " + clusterId + " [instance id]"
+                log.debug("[scale-down] Min is reached, hence not scaling down [cluster] " + clusterId + " [instance id] "
                     + clusterInstanceContext.getId());
                 //if(clusterInstanceContext.isInGroupScalingEnabledSubtree()){
+
                     delegator.delegateScalingDownBeyondMinNotification(clusterId, clusterInstanceContext.getNetworkPartitionId(),
                         clusterInstanceContext.getId());
                 //}
             }
-        }  else{
-            log.debug("[scaling] No decision made to either scale up or scale down ... [cluster] " + clusterId + " [instance id]"
+        } else{
+            log.debug("[scaling] No decision made to either scale up or scale down ... [cluster] " + clusterId + " [instance id] "
              + clusterInstanceContext.getId());
+
         }
 
 end

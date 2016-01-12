@@ -23,6 +23,7 @@ package org.apache.stratos.autoscaler.rule;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.stratos.autoscaler.algorithms.PartitionAlgorithm;
 import org.apache.stratos.autoscaler.algorithms.partition.OneAfterAnother;
 import org.apache.stratos.autoscaler.algorithms.partition.RoundRobin;
@@ -33,11 +34,17 @@ import org.apache.stratos.autoscaler.context.cluster.ClusterInstanceContext;
 import org.apache.stratos.autoscaler.context.member.MemberStatsContext;
 import org.apache.stratos.autoscaler.context.partition.ClusterLevelPartitionContext;
 import org.apache.stratos.autoscaler.context.partition.network.NetworkPartitionContext;
+import org.apache.stratos.autoscaler.costmodel.CostModelParameters;
+import org.apache.stratos.autoscaler.costmodel.PriceEstimator;
 import org.apache.stratos.autoscaler.event.publisher.InstanceNotificationPublisher;
 import org.apache.stratos.autoscaler.monitor.cluster.ClusterMonitor;
+import org.apache.stratos.cloud.controller.context.CloudControllerContext;
+import org.apache.stratos.cloud.controller.domain.Cartridge;
+import org.apache.stratos.cloud.controller.domain.IaasProvider;
 import org.apache.stratos.cloud.controller.stub.domain.MemberContext;
+import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
 import org.apache.stratos.common.constants.StratosConstants;
-
+import org.apache.commons.math3.analysis.polynomials.*;
 /**
  * This will have utility methods that need to be executed from rule file...
  */
@@ -45,6 +52,8 @@ public class RuleTasksDelegator {
 
     private static final Log log = LogFactory.getLog(RuleTasksDelegator.class);
     private static boolean arspiIsSet = false;
+    private static final float MAX_COST = 10000;
+
 
     public double getPredictedValueForNextMinute(float average, float gradient, float secondDerivative, int timeInterval) {
         double predictedValue;
@@ -57,6 +66,84 @@ public class RuleTasksDelegator {
 
         return predictedValue;
     }
+
+    private IaasProvider getIaaSProvider(String clusterId){
+        org.apache.stratos.cloud.controller.domain.MemberContext memberContext = CloudControllerContext.getInstance().getMemberContextsOfClusterId(clusterId).get(0);
+        String cartridgeType = memberContext.getCartridgeType();
+        Cartridge cartridge = CloudControllerContext.getInstance().getCartridge(cartridgeType);
+        IaasProvider iaasProvider = CloudControllerContext.getInstance().getIaasProviderOfPartition(
+                cartridge.getType(), memberContext.getPartition().getId());
+        return iaasProvider;
+    }
+
+
+    public int getRequiredInstanceCountBasedOnLA(double[] predictedValueSet, int minInstanceCount, int maxInstanceCount, String clusterId){
+        int instanceCount = 0;
+        SplineInterpolator interpolator = new SplineInterpolator();
+        double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
+        for (int i=1; i<= CostModelParameters.LIMIT_PREDICTION;i++)
+            index[i] = i;
+        PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
+        float minimumCost = MAX_COST;
+        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
+        for (int i= minInstanceCount; i<maxInstanceCount; i++){
+            float cost = priceEstimator.calculateTotalCostBasedOnLA(polynomial,i);
+            if (cost < minimumCost){
+                minimumCost = cost;
+                instanceCount = i;
+            }
+
+        }
+        return instanceCount;
+    }
+
+    public int getRequiredInstanceCountBasedOnMC(double[] predictedValueSet, int minInstanceCount, int maxInstanceCount, String clusterId){
+        int instanceCount = 0;
+        SplineInterpolator interpolator = new SplineInterpolator();
+        double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
+        for (int i=1; i<= CostModelParameters.LIMIT_PREDICTION;i++)
+            index[i] = i;
+        PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
+        float minimumCost = MAX_COST;
+        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
+        for (int i= minInstanceCount; i<maxInstanceCount; i++){
+            float cost = priceEstimator.calculateTotalCostBasedOnMC(polynomial,i);
+            if (cost < minimumCost){
+                minimumCost = cost;
+                instanceCount = i;
+            }
+
+        }
+        return instanceCount;
+    }
+
+    public int getRequiredInstanceCountBasedOnRIF(double[] predictedValueSet, int minInstanceCount, int maxInstanceCount, String clusterId){
+        int instanceCount = 0;
+        SplineInterpolator interpolator = new SplineInterpolator();
+        double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
+        for (int i=1; i<= CostModelParameters.LIMIT_PREDICTION;i++)
+            index[i] = i;
+        PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
+        float minimumCost = MAX_COST;
+        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
+        for (int i= minInstanceCount; i<maxInstanceCount; i++){
+            float cost = priceEstimator.calculateTotalCostBasedOnRIF(polynomial,i);
+            if (cost < minimumCost){
+                minimumCost = cost;
+                instanceCount = i;
+            }
+
+        }
+        return instanceCount;
+    }
+
+
 
 
     public int getNumberOfInstancesRequiredBasedOnRif(float rifPredictedValue, float rifThreshold) {
@@ -196,6 +283,8 @@ public class RuleTasksDelegator {
                                     clusterId,
                                     clusterInstanceId, clusterMonitorPartitionContext.getNetworkPartitionId(),
                                     minimumCountOfNetworkPartition, scalingDecisionId);
+
+
             if (memberContext != null) {
                 ClusterLevelPartitionContext partitionContext = clusterInstanceContext.
                         getPartitionCtxt(clusterMonitorPartitionContext.getPartitionId());
