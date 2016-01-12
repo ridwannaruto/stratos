@@ -41,7 +41,7 @@ import org.apache.stratos.autoscaler.monitor.cluster.ClusterMonitor;
 import org.apache.stratos.cloud.controller.context.CloudControllerContext;
 import org.apache.stratos.cloud.controller.domain.Cartridge;
 import org.apache.stratos.cloud.controller.domain.IaasProvider;
-import org.apache.stratos.cloud.controller.domain.MemberContext;
+import org.apache.stratos.cloud.controller.stub.domain.MemberContext;
 import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
 import org.apache.stratos.common.constants.StratosConstants;
 import org.apache.commons.math3.analysis.polynomials.*;
@@ -68,7 +68,7 @@ public class RuleTasksDelegator {
     }
 
     private IaasProvider getIaaSProvider(String clusterId){
-        MemberContext memberContext = CloudControllerContext.getInstance().getMemberContextsOfClusterId(clusterId).get(0);
+        org.apache.stratos.cloud.controller.domain.MemberContext memberContext = CloudControllerContext.getInstance().getMemberContextsOfClusterId(clusterId).get(0);
         String cartridgeType = memberContext.getCartridgeType();
         Cartridge cartridge = CloudControllerContext.getInstance().getCartridge(cartridgeType);
         IaasProvider iaasProvider = CloudControllerContext.getInstance().getIaasProviderOfPartition(
