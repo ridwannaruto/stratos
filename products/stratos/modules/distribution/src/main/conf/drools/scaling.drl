@@ -145,18 +145,18 @@ dialect "mvel"
         
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF Resetted?: " + rifReset))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF predicted value by Stratos: " + rifPredictedValue))
-        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF prediction by InteliScaler: " + rifPredictedArray))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF prediction by InteliScaler: " + rifPredictedArray[0] + "," + rifPredictedArray[1] + "," + rifPredictedArray[2] ))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF threshold: " + rifThreshold))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for RIF by InteliScaler: " + numberOfInstancesReuquiredBasedOnRif))
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC predicted value: " + mcPredictedValue))
-        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC prediction by InteliScaler: " + mcPredictedArray))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC prediction by InteliScaler: " + mcPredictedArray[0] + "," + mcPredictedArray[1] + "," + mcPredictedArray[2]))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC threshold: " + mcThreshold))
          eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for MC by InteliScaler: " + numberOfInstancesReuquiredBasedOnMemoryConsumption))
 
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA predicted value: " + laPredictedValue))
-        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA prediction by InteliScaler: " + laPredictedArray))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA prediction by InteliScaler: " + laPredictedArray[0] + "," + laPredictedArray[1] + "," + laPredictedArray[2]))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA threshold: " + laThreshold))
          eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for LA by InteliScaler: " + numberOfInstancesReuquiredBasedOnLoadAverage))
 
