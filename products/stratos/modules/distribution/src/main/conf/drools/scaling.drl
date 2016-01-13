@@ -144,14 +144,22 @@ dialect "mvel"
         scaleDown : Boolean() from (activeInstancesCount > numberOfRequiredInstances || (numberOfRequiredInstances == 1 && activeInstancesCount == 1))
         
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF Resetted?: " + rifReset))
-        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF predicted value: " + rifPredictedValue))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF predicted value by Stratos: " + rifPredictedValue))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF prediction by InteliScaler: " + rifPredictedArray))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF threshold: " + rifThreshold))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for RIF by InteliScaler: " + numberOfInstancesReuquiredBasedOnRif))
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC predicted value: " + mcPredictedValue))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC prediction by InteliScaler: " + mcPredictedArray))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC threshold: " + mcThreshold))
+         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for MC by InteliScaler: " + numberOfInstancesReuquiredBasedOnMemoryConsumption))
+
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA predicted value: " + laPredictedValue))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA prediction by InteliScaler: " + laPredictedArray))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA threshold: " + laThreshold))
+         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for LA by InteliScaler: " + numberOfInstancesReuquiredBasedOnLoadAverage))
+
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Scale-up action: " + scaleUp))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Scale-down action: " + scaleDown))
