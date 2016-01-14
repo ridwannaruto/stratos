@@ -52,12 +52,12 @@ public class PenaltyEstimator {
 
         int violatedPoints = 0;
 
-        for (double i=0; i< CostModelParameters.LIMIT_PREDICTION; i+= 0.1){
+        for (double i=1; i< CostModelParameters.LIMIT_PREDICTION; i+= 0.1){
             if (predictedPolynomial.value(i) > totalResourcePower)
                 violatedPoints++;
         }
         penaltyPercentage = (float)violatedPoints/(CostModelParameters.LIMIT_PREDICTION * 10);
-        return penaltyPercentage;
+        return penaltyPercentage*100;
     }
 
 
