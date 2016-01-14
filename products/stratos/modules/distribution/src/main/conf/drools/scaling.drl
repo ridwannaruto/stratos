@@ -130,9 +130,9 @@ dialect "mvel"
 
         */
 
-         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getNumberOfInstancesRequiredBasedOnRif(rifPredictedArrayList,minInstancesCount,maxInstancesCount)
-         numberOfInstancesReuquiredBasedOnMemoryConsumption : Integer() from delegator.getNumberOfInstancesRequiredBasedOnMemoryConsumption(mcPredictedArrayList,minInstancesCount,maxInstancesCount)
-         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from delegator.getNumberOfInstancesRequiredBasedOnLoadAverage(laPredictedArrayList, minInstancesCount, maxInstancesCount)
+         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getNumberOfInstancesRequiredBasedOnRif(rifPredictedArrayList,minInstancesCount,maxInstancesCount,activeInstancesCount,clusterId)
+         numberOfInstancesReuquiredBasedOnMemoryConsumption : Integer() from delegator.getNumberOfInstancesRequiredBasedOnMemoryConsumption(mcPredictedArrayList,minInstancesCount,maxInstancesCount,activeInstancesCount,clusterId)
+         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from delegator.getNumberOfInstancesRequiredBasedOnLoadAverage(laPredictedArrayList, minInstancesCount, maxInstancesCount,activeInstancesCount,clusterId)
 
 
 
