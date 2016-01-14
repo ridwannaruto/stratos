@@ -38,11 +38,7 @@ import org.apache.stratos.autoscaler.costmodel.CostModelParameters;
 import org.apache.stratos.autoscaler.costmodel.PriceEstimator;
 import org.apache.stratos.autoscaler.event.publisher.InstanceNotificationPublisher;
 import org.apache.stratos.autoscaler.monitor.cluster.ClusterMonitor;
-import org.apache.stratos.cloud.controller.context.CloudControllerContext;
-import org.apache.stratos.cloud.controller.domain.Cartridge;
-import org.apache.stratos.cloud.controller.domain.IaasProvider;
 import org.apache.stratos.cloud.controller.stub.domain.MemberContext;
-import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
 import org.apache.stratos.common.constants.StratosConstants;
 import org.apache.commons.math3.analysis.polynomials.*;
 
@@ -70,6 +66,7 @@ public class RuleTasksDelegator {
         return predictedValue;
     }
 
+    /*
     private IaasProvider getIaaSProvider(String clusterId){
         org.apache.stratos.cloud.controller.domain.MemberContext memberContext = CloudControllerContext.getInstance().getMemberContextsOfClusterId(clusterId).get(0);
         String cartridgeType = memberContext.getCartridgeType();
@@ -78,6 +75,8 @@ public class RuleTasksDelegator {
                 cartridge.getType(), memberContext.getPartition().getId());
         return iaasProvider;
     }
+
+    */
 
     private double[] convertArrayListToArray(ArrayList<Double> predictedArrayList){
         double[] predictedArray = new double[predictedArrayList.size()];
@@ -98,8 +97,10 @@ public class RuleTasksDelegator {
 
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
-        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
-        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        //String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+        //String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        String instanceType = "t2.micro";
+        String regionName = "south-asia-1";
         PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnLA(polynomial,i);
@@ -123,8 +124,10 @@ public class RuleTasksDelegator {
         }
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
-        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
-        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+//        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+//        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        String instanceType = "t2.micro";
+        String regionName = "south-asia-1";
         PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnMC(polynomial,i);
@@ -148,8 +151,10 @@ public class RuleTasksDelegator {
         }
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
-        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
-        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+//        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+//        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
+        String instanceType = "t2.micro";
+        String regionName = "south-asia-1";
         PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnRIF(polynomial,i);
