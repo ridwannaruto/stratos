@@ -323,6 +323,14 @@ public class ClusterInstanceContext extends InstanceContext {
     public double[] getMemoryConsumptionPredictedArray(){
         return memoryConsumption.getPredictions();
     }
+
+    public ArrayList<Double> convertArrayToArrayList(double[] predictionArray){
+        ArrayList<Double> predictionArrayList = new ArrayList<>();
+        for (int i=0; i< predictionArray.length;i++)
+            predictionArrayList.add(predictionArray[i]);
+        return predictionArrayList;
+    }
+
     public void setPredictedLoadAverage(double[] predictions) {
 
         log.info("\n\n+++++ ClusterInstanceContext.setPredctedLoadAverage+++++\n"+predictions+"\n\n");
@@ -336,6 +344,7 @@ public class ClusterInstanceContext extends InstanceContext {
         return loadAverage.getPredictions();
     }
 
+
     public void setPredictedRequestInFlight(double[] predictions) {
 
         log.info("\n\n+++++ ClusterInstanceContext.hsetPredctedRequest Inflight+++++\n"+predictions+"\n\n");
@@ -348,6 +357,8 @@ public class ClusterInstanceContext extends InstanceContext {
     public double[] getRequestInFlightPredictedArray(){
         return requestsInFlight.getPredictions();
     }
+
+
 
     public float getMemoryConsumptionSecondDerivative() {
         return memoryConsumption.getSecondDerivative();

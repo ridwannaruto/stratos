@@ -45,6 +45,9 @@ import org.apache.stratos.cloud.controller.stub.domain.MemberContext;
 import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
 import org.apache.stratos.common.constants.StratosConstants;
 import org.apache.commons.math3.analysis.polynomials.*;
+
+import java.util.ArrayList;
+
 /**
  * This will have utility methods that need to be executed from rule file...
  */
@@ -76,13 +79,20 @@ public class RuleTasksDelegator {
         return iaasProvider;
     }
 
+    private double[] convertArrayListToArray(ArrayList<Double> predictedArrayList){
+        double[] predictedArray = new double[predictedArrayList.size()];
+        for (int i=0; i<predictedArrayList.size(); i++)
+            predictedArray[i] = predictedArrayList.get(i);
+        return predictedArray;
+    }
 
-    public int getRequiredInstanceCountBasedOnLA(double[] predictedValueSet, int minInstanceCount, int maxInstanceCount, String clusterId){
+    public int getRequiredInstanceCountBasedOnLA(ArrayList<Double> predictedArrayList, int minInstanceCount, int maxInstanceCount, String clusterId){
         int instanceCount = 0;
         SplineInterpolator interpolator = new SplineInterpolator();
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
         for (int i=1; i<= CostModelParameters.LIMIT_PREDICTION;i++)
             index[i] = i;
+        double[] predictedValueSet = convertArrayListToArray(predictedArrayList);
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
         String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
@@ -99,12 +109,13 @@ public class RuleTasksDelegator {
         return instanceCount;
     }
 
-    public int getRequiredInstanceCountBasedOnMC(double[] predictedValueSet, int minInstanceCount, int maxInstanceCount, String clusterId){
+    public int getRequiredInstanceCountBasedOnMC(ArrayList<Double> predictedArrayList, int minInstanceCount, int maxInstanceCount, String clusterId){
         int instanceCount = 0;
         SplineInterpolator interpolator = new SplineInterpolator();
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
         for (int i=1; i<= CostModelParameters.LIMIT_PREDICTION;i++)
             index[i] = i;
+        double[] predictedValueSet = convertArrayListToArray(predictedArrayList);
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
         String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
@@ -121,12 +132,13 @@ public class RuleTasksDelegator {
         return instanceCount;
     }
 
-    public int getRequiredInstanceCountBasedOnRIF(double[] predictedValueSet, int minInstanceCount, int maxInstanceCount, String clusterId){
+    public int getRequiredInstanceCountBasedOnRIF(ArrayList<Double> predictedArrayList, int minInstanceCount, int maxInstanceCount, String clusterId){
         int instanceCount = 0;
         SplineInterpolator interpolator = new SplineInterpolator();
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
         for (int i=1; i<= CostModelParameters.LIMIT_PREDICTION;i++)
             index[i] = i;
+        double[] predictedValueSet = convertArrayListToArray(predictedArrayList);
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
         String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);

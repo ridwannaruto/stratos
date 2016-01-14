@@ -78,7 +78,7 @@ dialect "mvel"
         rifGradient : Float() from  clusterInstanceContext.getRequestsInFlightGradient()
         rifSecondDerivative : Float() from  clusterInstanceContext.getRequestsInFlightSecondDerivative()
         rifPredictedValue : Double() from delegator.getPredictedValueForNextMinute(rifAverage, rifGradient, rifSecondDerivative, 1)
-        rifPredictedArray: double[] from clusterInstanceContext.getRequestInFlightPredictedArray()
+        rifPredictedArrayList: List() from clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getRequestInFlightPredictedArray())
 
         // --- LA, MC and RIF parameters from CEP
         laAverage : Float() from clusterInstanceContext.getAverageLoadAverage()
@@ -93,12 +93,12 @@ dialect "mvel"
         mcThreshold : Float() from loadThresholds.getMemoryConsumptionThreshold()
 
         mcPredictedValue : Double() from delegator.getMemoryConsumptionPredictedValue(clusterInstanceContext)
-        mcPredictedArray : double[] from clusterInstanceContext.getMemoryConsumptionPredictedArray()
+        mcPredictedArrayList : List() from clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getMemoryConsumptionPredictedArray())
 
         laThreshold : Float() from loadThresholds.getLoadAverageThreshold()
 
         laPredictedValue : Double() from delegator.getLoadAveragePredictedValue(clusterInstanceContext)
-        laPredictedArray : double[] from clusterInstanceContext.getLoadAveragePredictedArray()
+        laPredictedArrayList : List() from clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getLoadAveragePredictedArray())
 
         activeInstancesCount : Integer() from clusterInstanceContext.getActiveMemberCount()
         maxInstancesCount : Integer() from clusterInstanceContext.getMaxInstanceCount()
@@ -130,9 +130,9 @@ dialect "mvel"
 
         */
 
-         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getNumberOfInstancesRequiredBasedOnRif(rifPredictedArray,minInstancesCount,maxInstancesCount)
-         numberOfInstancesReuquiredBasedOnMemoryConsumption : Integer() from delegator.getNumberOfInstancesRequiredBasedOnMemoryConsumption(mcPredictedArray,minInstancesCount,maxInstancesCount)
-         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from delegator.getNumberOfInstancesRequiredBasedOnLoadAverage(laPredictedArray, minInstancesCount, maxInstancesCount)
+         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getNumberOfInstancesRequiredBasedOnRif(rifPredictedArrayList,minInstancesCount,maxInstancesCount)
+         numberOfInstancesReuquiredBasedOnMemoryConsumption : Integer() from delegator.getNumberOfInstancesRequiredBasedOnMemoryConsumption(mcPredictedArrayList,minInstancesCount,maxInstancesCount)
+         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from delegator.getNumberOfInstancesRequiredBasedOnLoadAverage(laPredictedArrayList, minInstancesCount, maxInstancesCount)
 
 
 
@@ -145,20 +145,20 @@ dialect "mvel"
         
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF Resetted?: " + rifReset))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF predicted value by Stratos: " + rifPredictedValue))
-        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF prediction by InteliScaler: " + rifPredictedArray[0] + "," + rifPredictedArray[1] + "," + rifPredictedArray[2] ))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF prediction by InteliScaler: " + rifPredictedArrayList.get(0) + "," + rifPredictedArrayList.get(1) + "," + rifPredictedArrayList.get(2) ))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF threshold: " + rifThreshold))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for RIF by InteliScaler: " + numberOfInstancesReuquiredBasedOnRif))
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC predicted value: " + mcPredictedValue))
-        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC prediction by InteliScaler: " + mcPredictedArray[0] + "," + mcPredictedArray[1] + "," + mcPredictedArray[2]))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC prediction by InteliScaler: " + mcPredictedArrayList.get(0) + "," + mcPredictedArrayList.get(1) + "," + mcPredictedArrayList.get(2)))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " MC threshold: " + mcThreshold))
-         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for MC by InteliScaler: " + numberOfInstancesReuquiredBasedOnMemoryConsumption))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for MC by InteliScaler: " + numberOfInstancesReuquiredBasedOnMemoryConsumption))
 
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA predicted value: " + laPredictedValue))
-        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA prediction by InteliScaler: " + laPredictedArray[0] + "," + laPredictedArray[1] + "," + laPredictedArray[2]))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA prediction by InteliScaler: " + laPredictedArrayList.get(0) + "," + laPredictedArrayList.get(1) + "," + laPredictedArrayList.get(2)))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " LA threshold: " + laThreshold))
-         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for LA by InteliScaler: " + numberOfInstancesReuquiredBasedOnLoadAverage))
+        eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Instance count for LA by InteliScaler: " + numberOfInstancesReuquiredBasedOnLoadAverage))
 
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " Scale-up action: " + scaleUp))
