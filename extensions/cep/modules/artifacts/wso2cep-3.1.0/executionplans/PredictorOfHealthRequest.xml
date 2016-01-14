@@ -64,5 +64,7 @@
       valueOf="member_predicted_memory_consumption_stats" version="1.0.0"/>
     <stream name="member_predicted_load_average_stats"
       valueOf="member_predictor_load_average_stats" version="1.0.0"/>
+	  <stream name="predicted_memory_consumption_stats"
+			  valueOf="predicted_memory_consumption_stats" version="1.0.0"/>
   </exportedStreams>
 </executionPlan>
