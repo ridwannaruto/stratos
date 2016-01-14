@@ -313,7 +313,7 @@ public class ClusterInstanceContext extends InstanceContext {
 
     public void setPredictedMemoryConsumption(double[] predictions) {
 
-        log.info("\n\n+++++ ClusterInstanceContext.setPredictedMemoryConsumption+++++\n" + predictions + "\n\n");
+        log.info("\n\n+++++ ClusterInstanceContext.setPredictedMemoryConsumption+++++\n" + Arrays.toString(predictions) + "\n\n");
 
         memoryConsumption.setPredictions(predictions);
         predictedMemoryConsumptionReset = true;
@@ -333,7 +333,7 @@ public class ClusterInstanceContext extends InstanceContext {
 
     public void setPredictedLoadAverage(double[] predictions) {
 
-        log.info("\n\n+++++ ClusterInstanceContext.setPredctedLoadAverage+++++\n"+predictions+"\n\n");
+        log.info("\n\n+++++ ClusterInstanceContext.setPredctedLoadAverage+++++\n"+ Arrays.toString(predictions)+"\n\n");
 
         loadAverage.setPredictions(predictions);
         predictedLoadAverageReset = true;
@@ -347,7 +347,7 @@ public class ClusterInstanceContext extends InstanceContext {
 
     public void setPredictedRequestInFlight(double[] predictions) {
 
-        log.info("\n\n+++++ ClusterInstanceContext.hsetPredctedRequest Inflight+++++\n"+predictions+"\n\n");
+        log.info("\n\n+++++ ClusterInstanceContext.hsetPredctedRequest Inflight+++++\n"+Arrays.toString(predictions)+"\n\n");
 
         requestsInFlight.setPredictions(predictions);
         predictedRifReset = true;
