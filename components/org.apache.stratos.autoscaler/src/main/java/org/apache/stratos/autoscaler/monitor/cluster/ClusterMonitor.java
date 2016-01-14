@@ -761,7 +761,7 @@ public class ClusterMonitor extends Monitor {
         if (log.isDebugEnabled()) {
             //            log.debug(String.format("Avg Memory Consumption event: [cluster] %s [network-partition] %s "                                     + "[value] %s", clusterId, networkPartitionId, values));
         }
-        log.info("\n\n+++++ ClusterMonitor.handlePredictedRequestInFlightEvent+++++\n"+predictedRequestsInFlightEvent.getClusterId()+ " " +predictedRequestsInFlightEvent.getPredictions()+"\n\n");
+        log.info("\n\n+++++ ClusterMonitor.handlePredictedRequestInFlightEvent+++++\n"+predictedRequestsInFlightEvent.getClusterId()+ " " +Arrays.toString(values)+ "\tpartition: " + networkPartitionId + "\tcluster: " + clusterInstanceId + "\n\n");
 
         ClusterInstanceContext clusterLevelNetworkPartitionContext = getClusterInstanceContext(
                 networkPartitionId, clusterInstanceId);
