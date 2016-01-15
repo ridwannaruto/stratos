@@ -35,7 +35,7 @@ import org.apache.stratos.autoscaler.context.member.MemberStatsContext;
 import org.apache.stratos.autoscaler.context.partition.ClusterLevelPartitionContext;
 import org.apache.stratos.autoscaler.context.partition.network.NetworkPartitionContext;
 import org.apache.stratos.autoscaler.costmodel.CostModelParameters;
-import org.apache.stratos.autoscaler.costmodel.PriceEstimator;
+import org.apache.stratos.autoscaler.costmodel.CostEstimator;
 import org.apache.stratos.autoscaler.event.publisher.InstanceNotificationPublisher;
 import org.apache.stratos.autoscaler.monitor.cluster.ClusterMonitor;
 import org.apache.stratos.cloud.controller.stub.domain.MemberContext;
@@ -101,9 +101,12 @@ public class RuleTasksDelegator {
         //String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
-        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
+        CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnLA(polynomial,i);
+            if (log.isDebugEnabled()) {
+                log.debug("");
+            }
             if (cost < minimumCost){
                 minimumCost = cost;
                 instanceCount = i;
@@ -128,7 +131,7 @@ public class RuleTasksDelegator {
 //        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
-        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
+        CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnMC(polynomial,i);
             if (cost < minimumCost){
@@ -155,7 +158,7 @@ public class RuleTasksDelegator {
 //        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
-        PriceEstimator priceEstimator = new PriceEstimator(instanceType,regionName);
+        CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnRIF(polynomial,i);
             if (cost < minimumCost){

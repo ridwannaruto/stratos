@@ -6,11 +6,11 @@ import org.apache.stratos.autoscaler.costmodel.data.InstanceSpec;
 /**
  * Created by ridwan on 1/7/16.
  */
-public class PriceEstimator {
+public class CostEstimator {
 
     private InstanceSpec instanceType;
     private PenaltyEstimator penaltyEstimator;
-    public PriceEstimator(String instanceType, String regionName){
+    public CostEstimator(String instanceType, String regionName){
         this.instanceType = new InstanceSpec(instanceType,regionName);
         penaltyEstimator = new PenaltyEstimator(this.instanceType);
     }
