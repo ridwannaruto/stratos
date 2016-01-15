@@ -326,8 +326,14 @@ public class ClusterInstanceContext extends InstanceContext {
 
     public ArrayList<Double> convertArrayToArrayList(double[] predictionArray){
         ArrayList<Double> predictionArrayList = new ArrayList<>();
-        for (int i=0; i< predictionArray.length;i++)
-            predictionArrayList.add(predictionArray[i]);
+        if (predictionArray == null){
+            for (int i=0; i< predictionArray.length;i++)
+                predictionArrayList.add(0.0);
+        }else{
+            for (int i=0; i< predictionArray.length;i++)
+                predictionArrayList.add(predictionArray[i]);
+        }
+
         return predictionArrayList;
     }
 
