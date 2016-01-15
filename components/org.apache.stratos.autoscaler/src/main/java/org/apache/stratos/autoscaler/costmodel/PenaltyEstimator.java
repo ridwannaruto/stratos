@@ -18,21 +18,23 @@ public class PenaltyEstimator {
     }
 
     public float calculatePenaltyCost(PolynomialSplineFunction predictedPolynomial, int instanceCount, char type){
-        float penaltyCost = 0;
+        float penaltyCostPercentage = 0;
         float penaltyPercentage = calculatePenaltyPercentage(predictedPolynomial, instanceCount,type);
 
         //Google Appengine SLA modified
-        if (penaltyPercentage >= 0.05  && penaltyPercentage < 1){
-            penaltyCost = 0.1f;
-        }else if (penaltyPercentage >= 1 && penaltyPercentage > 5){
-            penaltyCost = 0.25f;
-        }else if (penaltyPercentage >= 5 && penaltyPercentage > 10){
-            penaltyCost = 0.5f;
+        if(penaltyPercentage < 0.05){
+            penaltyCostPercentage = 0;
+        }else if (penaltyPercentage >= 0.05  && penaltyPercentage < 1){
+            penaltyCostPercentage = 0.1f;
+        }else if (penaltyPercentage >= 1 && penaltyPercentage < 5){
+            penaltyCostPercentage = 0.25f;
+        }else if (penaltyPercentage >= 5 && penaltyPercentage < 10){
+            penaltyCostPercentage = 0.5f;
         }else{
-            penaltyCost = (float)Math.pow(MANTISSA,penaltyPercentage/EXPONENT_FACTOR);
+            penaltyCostPercentage = (float)Math.pow(MANTISSA,penaltyPercentage/EXPONENT_FACTOR);
         }
 
-        return penaltyCost*instanceType.getPerInstanceCost()*instanceCount;
+        return penaltyCostPercentage*instanceType.getPerInstanceCost()*instanceCount;
     }
 
     private float calculatePenaltyPercentage(PolynomialSplineFunction predictedPolynomial, int instanceCount, char type){
