@@ -80,8 +80,14 @@ public class RuleTasksDelegator {
 
     private double[] convertArrayListToArray(ArrayList<Double> predictedArrayList){
         double[] predictedArray = new double[predictedArrayList.size()];
-        for (int i=0; i<predictedArrayList.size(); i++)
-            predictedArray[i] = predictedArrayList.get(i);
+        if (predictedArrayList == null){
+            for (int i=0; i<predictedArrayList.size(); i++)
+                predictedArray[i] = 0;
+        }else{
+            for (int i=0; i<predictedArrayList.size(); i++)
+                predictedArray[i] = predictedArrayList.get(i);
+        }
+
         return predictedArray;
     }
 
@@ -147,7 +153,6 @@ public class RuleTasksDelegator {
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
         for (int i=0; i< CostModelParameters.LIMIT_PREDICTION;i++) {
             index[i] = i + 1;
-            predictedValueSet[i] *= activeInstanceCount;
         }
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
