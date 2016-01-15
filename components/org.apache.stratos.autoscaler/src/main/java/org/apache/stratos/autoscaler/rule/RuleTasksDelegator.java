@@ -102,11 +102,8 @@ public class RuleTasksDelegator {
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
-        for (int i= minInstanceCount; i<maxInstanceCount; i++){
+        for (int i= minInstanceCount; i<=maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnLA(polynomial,i);
-            if (log.isDebugEnabled()) {
-                log.debug("");
-            }
             if (cost < minimumCost){
                 minimumCost = cost;
                 instanceCount = i;
@@ -132,7 +129,7 @@ public class RuleTasksDelegator {
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
-        for (int i= minInstanceCount; i<maxInstanceCount; i++){
+        for (int i= minInstanceCount; i<=maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnMC(polynomial,i);
             if (cost < minimumCost){
                 minimumCost = cost;
@@ -159,9 +156,10 @@ public class RuleTasksDelegator {
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
-        for (int i= minInstanceCount; i<maxInstanceCount; i++){
+        for (int i= minInstanceCount; i<=maxInstanceCount; i++){
             float cost = priceEstimator.calculateTotalCostBasedOnRIF(polynomial,i);
-            if (cost < minimumCost){
+
+            if (cost < minimumCost) {
                 minimumCost = cost;
                 instanceCount = i;
             }
