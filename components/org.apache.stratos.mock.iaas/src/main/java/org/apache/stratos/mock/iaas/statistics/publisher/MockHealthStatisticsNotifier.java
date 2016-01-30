@@ -109,7 +109,7 @@ public class MockHealthStatisticsNotifier implements Runnable {
         }
 
         try {
-            int requestsInFlight = MockHealthStatistics.getInstance().getStatistics(
+            int requestsInFlight = (int) MockHealthStatistics.getInstance().getStatistics(
                     mockMemberContext.getServiceName(), MockScalingFactor.RequestsInFlight);
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Publishing requests in flight: [member-id] %s [value] %f",

@@ -122,7 +122,7 @@ public class MockIaasConfigParser {
                             }
 
                             String[] sampleValuesArray = sampleValuesStr.split(",");
-                            List<Integer> sampleValues = convertStringArrayToIntegerList(sampleValuesArray);
+                            List<Double> sampleValues = convertStringArrayToIntegerList(sampleValuesArray);
                             int sampleDuration = Integer.parseInt(sampleDurationStr);
 
                             MockHealthStatisticsPattern mockHealthStatisticsPattern = new MockHealthStatisticsPattern
@@ -178,10 +178,10 @@ public class MockIaasConfigParser {
      * @param stringArray string array
      * @return integer list
      */
-    private static List<Integer> convertStringArrayToIntegerList(String[] stringArray) {
-        List<Integer> integerList = new ArrayList<Integer>();
+    private static List<Double> convertStringArrayToIntegerList(String[] stringArray) {
+        List<Double> integerList = new ArrayList<Double>();
         for (String value : stringArray) {
-            integerList.add(Integer.parseInt(value));
+            integerList.add(Double.parseDouble(value));
         }
         return integerList;
     }

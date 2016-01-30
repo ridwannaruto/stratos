@@ -43,12 +43,12 @@ public class MockHealthStatisticsUpdater implements Runnable {
     @Override
     public void run() {
         try {
-            int nextSample = statisticsPattern.getNextSample();
+            double nextSample = statisticsPattern.getNextSample();
             MockHealthStatistics.getInstance().addStatistics(statisticsPattern.getCartridgeType(),
                     statisticsPattern.getFactor(), nextSample);
 
             if (log.isInfoEnabled()) {
-                log.info(String.format("Mock statistics updated: [cartridge-type] %s [factor] %s [value] %d",
+                log.info(String.format("Mock statistics updated: [cartridge-type] %s [factor] %s [value] %f",
                         statisticsPattern.getCartridgeType(), statisticsPattern.getFactor().toString(), nextSample));
             }
         } catch (NoSampleValuesFoundException ignore) {

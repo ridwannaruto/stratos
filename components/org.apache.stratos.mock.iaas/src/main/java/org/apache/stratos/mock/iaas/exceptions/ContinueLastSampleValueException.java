@@ -24,13 +24,13 @@ package org.apache.stratos.mock.iaas.exceptions;
  * the last sample value.
  */
 public class ContinueLastSampleValueException extends Exception {
-    private int lastSampleValue;
+    private double lastSampleValue;
 
-    public ContinueLastSampleValueException(int lastSampleValue) {
+    public ContinueLastSampleValueException(double lastSampleValue) {
         this.lastSampleValue = lastSampleValue;
     }
 
-    public int getLastSampleValue() {
+    public double getLastSampleValue() {
         return lastSampleValue;
     }
 }
