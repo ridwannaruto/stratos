@@ -70,8 +70,13 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
     private Queue<Double> globalData=new LinkedList<>();
     private int MAX_TRAIN_SET_SIZE=1000;
 
+
     private String elementID;
     private String streamId;
+    private String type;
+    private long hash;
+    private String context="";
+
 
     private ISchedulerSiddhiQueue<StreamEvent> globalWindow;
     private long[] timeStamps;
@@ -83,16 +88,26 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
     protected void processEvent(InEvent event) {
         acquireLock();
         try{
-             if(newEventList.isEmpty() || !checkEqual(newEventList.get(newEventList.size() - 1),event)) {
-                    newEventList.add(event);
-                String context="log id: "+log+" | "+System.identityHashCode(log)+" +\n"+" threadId:"+Thread.currentThread()+" \nwindow Processor:"+System.identityHashCode(this)+" \nstream:"+streamId+" \nevent"+event.getData(4)+" \nvalue:"+event.getData(5)+"\nEVENT: "+event+"\n\n+++++++";
-                log.info("+++++Recieved events :"+event.getStreamId()+" "+ event.getData(0)+" \n"+context );
 
+            if(newEventList.isEmpty() || !checkEqual(newEventList.get(newEventList.size() - 1),event)) {
+                    newEventList.add(event);
+
+                 if(type==null || type.equals(""))
+                 {
+                    type=(String)event.getData(4);
+                    context=context+" \n\t eventType:"+type;
+                 }
+                String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:processEvent()\n\n";
+                if(type.equals("memory_consumption")||type.equals("load_average"))
+                    log.info("+++++ Received event:"+event.getStreamId()+" :"+ event.getData(5)+context);
+                else
+                log.info("+++++ Received event:"+event.getStreamId()+" :"+ event.getData(3)+context);
             }
             } finally {
             releaseLock();
         }
     }
+
 
     protected boolean checkEqual(InEvent e1,InEvent e2){
 
@@ -135,6 +150,8 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
 
     @Override
     public void run() {
+        String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:processEvent()\n\n";
+
         acquireLock();
         try {
             long scheduledTime = System.currentTimeMillis();
@@ -194,56 +211,14 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
     }
 
 
-    private InEvent[] gradient(InEvent firstInEvent, InEvent lastInEvent) {
-        double firstVal = 0.0, lastVal = 0.0;
-        // FIXME I'm not sure whether there's some other good way to do correct casting,
-        // based on the type.
-        if (Attribute.Type.DOUBLE.equals(subjectAttrType)) {
-            firstVal = (Double) firstInEvent.getData()[subjectAttrIndex];
-            lastVal = (Double) lastInEvent.getData()[subjectAttrIndex];
-        } else if (Attribute.Type.INT.equals(subjectAttrType)) {
-            firstVal = (Integer) firstInEvent.getData()[subjectAttrIndex];
-            lastVal = (Integer) lastInEvent.getData()[subjectAttrIndex];
-        } else if (Attribute.Type.LONG.equals(subjectAttrType)) {
-            firstVal = (Long) firstInEvent.getData()[subjectAttrIndex];
-            lastVal = (Long) lastInEvent.getData()[subjectAttrIndex];
-        } else if (Attribute.Type.FLOAT.equals(subjectAttrType)) {
-            firstVal = (Float) firstInEvent.getData()[subjectAttrIndex];
-            lastVal = (Float) lastInEvent.getData()[subjectAttrIndex];
-        }
-
-        long t1 = firstInEvent.getTimeStamp();
-        long t2 = lastInEvent.getTimeStamp();
-        long millisecondsForASecond = 1000;
-        long tGap = t2 - t1 > millisecondsForASecond ? t2 - t1 : millisecondsForASecond;
-        double gradient = 0.0;
-        if (tGap > 0) {
-            gradient = ((lastVal - firstVal) * millisecondsForASecond) / tGap;
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Gradient: " + gradient + " Last val: " + lastVal +
-                      " First val: " + firstVal + " Time Gap: " + tGap + " t1: "+t1+ " t2: "+
-                      t2+" hash: "+this.hashCode());
-        }
-        Object[] data = firstInEvent.getData().clone();
-        String s="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15";
-
-        data[outputIndex] = s;
-        InEvent gradientEvent =
-                new InEvent(firstInEvent.getStreamId(), (t1+t2)/2,
-                            data);
-        InEvent[] output = new InEvent[1];
-        output[0] = gradientEvent;
-        return output;
-    }
-
-
 
     public double[] extractDataset(){
 
-        log.info("++++ global list"+globalData.toString());
+        String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:extractDataset\n\n";
+
+        log.info("++++ global list"+context+" \n "+globalData.toString());
         globalData.add(getAverage());
-        log.info("++++ global list"+globalData.toString());
+        log.info("++++ global list"+context+" \n "+globalData.toString());
 
         if(globalData.size()>MAX_TRAIN_SET_SIZE) {
             globalData.poll();
@@ -260,14 +235,14 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
     }
     public double getAverage(){
 
+        String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:average()\n\n";
         collectLastWindow();
         int i=0;
         double sum=0;
 
-        log.info("GET AVERAGE"+Arrays.toString(dataValues));
+        log.info("GET AVERAGE"+Arrays.toString(dataValues)+localContext);
         for( i=0;i<dataValues.length;i++)
         {
-
                 sum+=dataValues[i];
         }
 
@@ -277,37 +252,76 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
         return sum/i;
     }
 
-    public synchronized InEvent[]  getPredictions(double [] dataValues) {
+    public InEvent[] equalEventsHandler(double datavalues[])
+    {
 
-        try {
+
+        boolean flag = false;
+        for(int i=0;i<datavalues.length-1;i++)
+        {
+            if(datavalues[i]!=datavalues[i+1])
+            {    flag=true;
+                break;
+            }
+        }
+
+        if(!flag)
+        {
+            Object[] data3 = newEventList.get(0).getData().clone();
+            InEvent[] inEvents3 = new InEvent[1];
+            double rvalue=dataValues[dataValues.length-1];
+            String s=dataValues[dataValues.length-1]+"";
+            for(int i=1;i<15;i++) {
+                s+=",";
+                s+=rvalue;
+            }
+            data3[outputIndex]=s;
+            inEvents3[0] = new InEvent(newEventList.get(0).getStreamId(), newEventList.get(0).getTimeStamp(), data3);
+            return inEvents3;
+        }
+        return null;
+    }
+
+
+    public synchronized InEvent[]  getPredictions(double [] dataValues) {
+        String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:getPredictions()\n\n";
+        InEvent[] e1= equalEventsHandler(dataValues);
+      if(e1!=null) {
+          log.info("+++ EQUAL or 1'st"+Arrays.toString(dataValues));
+
+          return e1;
+      }
+          try {
             long id=Thread.currentThread().getId();
             long startTime=System.currentTimeMillis();
             rEngine.assign("data" + id, dataValues);
-            log.info("ID:"+id+ "array is assigned to R"+Arrays.toString(dataValues));
+            log.info("ID:"+id+ "array is assigned to R:\n"+dataValues+localContext);
             double array1[] = rEngine.parseAndEval("data"+id).asDoubles();
-            log.info("ID:"+id+"Array is read back successfully");
-            log.info("ID:" + id +" " + Arrays.toString(array1));
-            double results[] = rEngine.parseAndEval("prediction(ts(data"+id+"),15);").asDoubles();
-            log.info("ID:"+id+" predictions are generated!!!");
-            long endTime = System.currentTimeMillis();
-            log.info("ID:" + id + " time:" + (endTime - startTime) + " " + Arrays.toString(results));
-            Object[] data = newEventList.get(0).getData().clone();
-            StringBuffer stringBuffer =new StringBuffer();
+//            log.info("ID:"+id+"Array is read back successfully");
+//            log.info("ID:" + id +" " + Arrays.toString(array1));
 
+            double results[] = rEngine.parseAndEval("prediction(ts(data"+id+"),15);").asDoubles();
+            log.info("ID:"+id+" predictions are generated!!!"+Arrays.toString(results)+localContext);
+            long endTime = System.currentTimeMillis();
+//
+//            log.info("ID:" + id + " time:" + (endTime - startTime) + " " + Arrays.toString(results));
+            Object[] data = newEventList.get(0).getData().clone();
+
+            StringBuffer stringBuffer =new StringBuffer();
             for (int i = 0; i < results.length; i++) {
                stringBuffer.append(results[i]);
                if(i!=results.length-1)
                     stringBuffer.append(",");
             }
+
+
             data[outputIndex] = stringBuffer.toString();
             InEvent[] inEvents = new InEvent[1];
             inEvents[0] = new InEvent(newEventList.get(0).getStreamId(), newEventList.get(0).getTimeStamp(), data);
             return inEvents;
-        } catch (REngineException e) {
-
-            log.error("++++EXCEPTION RECOVERD +++");
+        } catch (Exception e) {
+            log.error("++++EXCEPTION RECOVERD +++" + localContext);
             Object[] data2 = newEventList.get(0).getData().clone();
-
             InEvent[] inEvents2 = new InEvent[1];
             double rvalue=dataValues[dataValues.length-1];
             String s=dataValues[dataValues.length-1]+"";
@@ -321,10 +335,8 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
             inEvents2[0] = new InEvent(newEventList.get(0).getStreamId(), newEventList.get(0).getTimeStamp(), data2);
 
             return inEvents2;
-        } catch (REXPMismatchException e) {
-            e.printStackTrace();
         }
-        return null;
+
     }
 
 
@@ -346,13 +358,10 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
             } else if (Attribute.Type.FLOAT.equals(attrType)) {
                 dataValues[indexOfEvent] = (Float) eventToPredict.getData()[subjectAttrIndex];
             }
-
         }
-
         if(timeStamps.length == 0){
             timeStamps = new long[1];
             dataValues = new double[1];
-
             timeStamps[0] = System.currentTimeMillis();
             dataValues[0] = 40;
         }
@@ -377,13 +386,14 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
 
     @Override
     protected void init(Expression[] parameters, QueryPostProcessingElement nextProcessor, AbstractDefinition streamDefinition, String elementId, boolean async, SiddhiContext siddhiContext) {
-        String context="log id: "+log+" | "+System.identityHashCode(log)+" +\n"+" threadId:"+Thread.currentThread();
+        this.elementID=elementId;
+        this.streamId=streamDefinition.getId();
+        this.hash=System.identityHashCode(this);
+        this.context="\n\tElementID:"+elementID+"\n\tStreamId:"+streamId+"\n\twindowProcessor:"+hash;
 
-        log.info("\n\n!!!! Predictor Finder  window Processor created !!!!\n\n" + elementId +
-                 "  \n\nstreamid:" + streamDefinition.getId() + " \n\n ID:" +
-                 System.identityHashCode(this) + context);
+        String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:intit()\n\n";
 
-       // log.info("\n\n!!!! Predictor window Processor created !!!!"+elementId+"  "+streamDefinition.getId()+" ");
+        log.info("\n!!!! Predictor Finder  window Processor created !!!!" + localContext);
         if (parameters[0] instanceof IntConstant) {
             timeToKeep = ((IntConstant) parameters[0]).getValue();
         } else {
@@ -392,7 +402,7 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
 
         try {
             rEngine = JRIConnection.getRserverConnection();
-            log.info("ElementID: "+ elementId+" streamId:"+streamDefinition.getId() +"  streamObject"+streamDefinition+"  ID:"+ Thread.currentThread().getId()+"rEngine connection Established");
+            log.info("ID:"+ Thread.currentThread().getId()+"\nrEngine connection Established"+localContext);
         } catch (IOException e) {
             e.printStackTrace();
             e.printStackTrace();
@@ -403,8 +413,6 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
         }
 
 
-        this.elementID=elementId;
-        this.streamId=streamDefinition.getId();
 
         String subjectedAttr = ((Variable) parameters[1]).getAttributeName();
         subjectAttrIndex = streamDefinition.getAttributePosition(subjectedAttr);
