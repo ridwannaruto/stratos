@@ -151,7 +151,7 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
     @Override
     public void run() {
         String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:processEvent()\n\n";
-
+        log.info("RUN :"+localContext);
         acquireLock();
         try {
             long scheduledTime = System.currentTimeMillis();
@@ -213,17 +213,13 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
 
 
     public double[] extractDataset(){
-
         String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:extractDataset\n\n";
-
         log.info("++++ global list"+context+" \n "+globalData.toString());
         globalData.add(getAverage());
         log.info("++++ global list"+context+" \n "+globalData.toString());
-
         if(globalData.size()>MAX_TRAIN_SET_SIZE) {
             globalData.poll();
         }
-
         double[] dataSet=new double[globalData.size()];
 
         Iterator<Double> iterator=globalData.iterator();
@@ -234,21 +230,17 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
         return  dataSet;
     }
     public double getAverage(){
-
         String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:average()\n\n";
         collectLastWindow();
         int i=0;
         double sum=0;
-
         log.info("GET AVERAGE"+Arrays.toString(dataValues)+localContext);
         for( i=0;i<dataValues.length;i++)
         {
                 sum+=dataValues[i];
         }
-
         if(i==0)
         return  0.0;
-
         return sum/i;
     }
 
@@ -284,13 +276,33 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
 
 
     public synchronized InEvent[]  getPredictions(double [] dataValues) {
+
+
         String localContext=context+"\n\tThread:"+Thread.currentThread().getId()+"\\n\\t method:getPredictions()\n\n";
+
+        try {
+            if(rEngine==null) {
+                rEngine = JRIConnection.getRserverConnection();
+                log.info("ID:" + Thread.currentThread().getId() +  "\nrEngine connection Established" );
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            e.printStackTrace();
+        } catch (REngineException e) {
+            e.printStackTrace();
+        } catch (REXPMismatchException e) {
+            e.printStackTrace();
+        }
+
+
         InEvent[] e1= equalEventsHandler(dataValues);
       if(e1!=null) {
           log.info("+++ EQUAL or 1'st"+Arrays.toString(dataValues));
-
           return e1;
       }
+
+
+
           try {
             long id=Thread.currentThread().getId();
             long startTime=System.currentTimeMillis();
@@ -320,6 +332,7 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
             inEvents[0] = new InEvent(newEventList.get(0).getStreamId(), newEventList.get(0).getTimeStamp(), data);
             return inEvents;
         } catch (Exception e) {
+              e.printStackTrace();
             log.error("++++EXCEPTION RECOVERD +++" + localContext);
             Object[] data2 = newEventList.get(0).getData().clone();
             InEvent[] inEvents2 = new InEvent[1];
@@ -330,12 +343,12 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
                 s+=",";
                 s+=rvalue;
             }
-
             data2[outputIndex]=s;
             inEvents2[0] = new InEvent(newEventList.get(0).getStreamId(), newEventList.get(0).getTimeStamp(), data2);
-
             return inEvents2;
         }
+
+
 
     }
 
@@ -382,7 +395,10 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
         window.reSchedule();
     }
 
-
+    @Override protected void finalize() throws Throwable {
+        super.finalize();
+        log.info("+++++++++++++++++++++ Deleted Window processor:\n"+context);
+    }
 
     @Override
     protected void init(Expression[] parameters, QueryPostProcessingElement nextProcessor, AbstractDefinition streamDefinition, String elementId, boolean async, SiddhiContext siddhiContext) {
@@ -400,17 +416,17 @@ public class PredictorWindowProcessor extends WindowProcessor implements Runnabl
             timeToKeep = ((LongConstant) parameters[0]).getValue();
         }
 
-        try {
-            rEngine = JRIConnection.getRserverConnection();
-            log.info("ID:"+ Thread.currentThread().getId()+"\nrEngine connection Established"+localContext);
-        } catch (IOException e) {
-            e.printStackTrace();
-            e.printStackTrace();
-        } catch (REngineException e) {
-            e.printStackTrace();
-        } catch (REXPMismatchException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            rEngine = JRIConnection.getRserverConnection();
+//            log.info("ID:"+ Thread.currentThread().getId()+"\nrEngine connection Established"+localContext);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            e.printStackTrace();
+//        } catch (REngineException e) {
+//            e.printStackTrace();
+//        } catch (REXPMismatchException e) {
+//            e.printStackTrace();
+//        }
 
 
 
