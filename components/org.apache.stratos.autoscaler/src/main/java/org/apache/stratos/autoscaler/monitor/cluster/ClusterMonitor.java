@@ -1056,6 +1056,57 @@ public class ClusterMonitor extends Monitor {
         memberStatsContext.setGradientOfLoadAverage(value);
     }
 
+    public void handleMemberPredictedLoadAverageEvent(
+            MemberPredictedLoadAverageEvent  memberPredictedLoadAverageEvent) {
+
+        String clusterInstanceId = memberPredictedLoadAverageEvent.getClusterInstanceId();
+        String memberId = memberPredictedLoadAverageEvent.getMemberId();
+        Member member = getMemberByMemberId(memberId);
+        String networkPartitionId = getNetworkPartitionIdByMemberId(memberId);
+        ClusterInstanceContext networkPartitionCtxt = getClusterInstanceContext(networkPartitionId,
+                                                                                clusterInstanceId);
+        ClusterLevelPartitionContext partitionCtxt = networkPartitionCtxt.getPartitionCtxt(
+                member.getPartitionId());
+        MemberStatsContext memberStatsContext = partitionCtxt.getMemberStatsContext(memberId);
+        if (null == memberStatsContext) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("Member context is not available for : [member] %s", memberId));
+            }
+            return;
+        }
+        double [] values = memberPredictedLoadAverageEvent.getPredictions();
+
+        log.info("++++++ " +
+                 " Load Average"+"\n clusterID:"+clusterInstanceId+" \nmemberId:"+memberId+" \n"+" values:"+Arrays.toString(values));
+        memberStatsContext.setPredictedLoadAverage(values);
+
+    }
+
+
+    public void handleMemberPredictedMemoryConsumptionEvent(
+            MemberPredictedMemoryConsumptionEvent  memberPredictedMemoryConsumptionEvent) {
+
+        String clusterInstanceId = memberPredictedMemoryConsumptionEvent.getClusterInstanceId();
+        String memberId = memberPredictedMemoryConsumptionEvent.getMemberId();
+        Member member = getMemberByMemberId(memberId);
+        String networkPartitionId = getNetworkPartitionIdByMemberId(memberId);
+        ClusterInstanceContext networkPartitionCtxt = getClusterInstanceContext(networkPartitionId,
+                                                                                clusterInstanceId);
+        ClusterLevelPartitionContext partitionCtxt = networkPartitionCtxt.getPartitionCtxt(
+                member.getPartitionId());
+        MemberStatsContext memberStatsContext = partitionCtxt.getMemberStatsContext(memberId);
+        if (null == memberStatsContext) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("Member context is not available for : [member] %s", memberId));
+            }
+            return;
+        }
+        double [] values = memberPredictedMemoryConsumptionEvent.getPredictions();
+
+        log.info("++++++ MEMBER PREDICED MEMORY CONSUMPTION"+"\n clusterID:"+clusterInstanceId+" \nmemberId:"+memberId+" \n"+" values:"+Arrays.toString(values));
+        memberStatsContext.setPredictedMemoryConsumption(values);
+    }
+
     public void handleMemberSecondDerivativeOfLoadAverageEvent(
             MemberSecondDerivativeOfLoadAverageEvent memberSecondDerivativeOfLoadAverageEvent) {
 
