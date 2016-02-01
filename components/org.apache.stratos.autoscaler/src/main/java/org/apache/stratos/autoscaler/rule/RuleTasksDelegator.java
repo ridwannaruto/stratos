@@ -54,6 +54,7 @@ public class RuleTasksDelegator {
     private static boolean arspiIsSet = false;
     private static final float MAX_COST = 10000;
     private static final float MIN_ALLOWED_PENALTY = 3.f;
+    private static final int MAX_NODES = 2;
 
 
     public double getPredictedValueForNextMinute(float average, float gradient, float secondDerivative, int timeInterval) {
@@ -111,7 +112,7 @@ public class RuleTasksDelegator {
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
         PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
-            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,activeInstanceCount,CostModelParameters.PERF_MEASURE_TYPE_LA);
+            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,i,CostModelParameters.PERF_MEASURE_TYPE_LA);
             float cost = priceEstimator.calculateTotalCost("LA",penalty,i);
             if (cost < minimumCost){
                 minimumCost = cost;
@@ -124,9 +125,9 @@ public class RuleTasksDelegator {
 
         }
 
-        if (isViolated)
-            return maxInstanceCount;
-
+        if (isViolated) {
+            return activeInstanceCount + MAX_NODES;
+        }
         return instanceCount;
     }
 
@@ -148,7 +149,7 @@ public class RuleTasksDelegator {
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
         PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
-            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial, activeInstanceCount, CostModelParameters.PERF_MEASURE_TYPE_MC);
+            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial, i, CostModelParameters.PERF_MEASURE_TYPE_MC);
             float cost = priceEstimator.calculateTotalCost("MC",penalty, i);
             if (cost < minimumCost){
                 minimumCost = cost;
@@ -161,8 +162,9 @@ public class RuleTasksDelegator {
 
         }
 
-        if (isViolated)
-            return maxInstanceCount;
+        if (isViolated) {
+            return activeInstanceCount + MAX_NODES;
+        }
         return instanceCount;
     }
 
@@ -182,7 +184,7 @@ public class RuleTasksDelegator {
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
         PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
-            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,activeInstanceCount,CostModelParameters.PERF_MEASURE_TYPE_RIF);
+            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,i,CostModelParameters.PERF_MEASURE_TYPE_RIF);
             float cost = priceEstimator.calculateTotalCost("RIF",penalty, i);
 
 
@@ -197,8 +199,9 @@ public class RuleTasksDelegator {
 
         }
 
-        if(isViolated)
-            return maxInstanceCount;
+        if (isViolated) {
+            return activeInstanceCount + MAX_NODES;
+        }
         return instanceCount;
     }
 
