@@ -36,11 +36,11 @@ public class MockHealthStatisticsPattern {
     private String cartridgeType;
     private MockScalingFactor factor;
     private StatisticsPatternMode mode;
-    private List<Integer> sampleValues;
+    private List<Double> sampleValues;
     private int sampleDuration;
     private Iterator sampleValuesIterator;
 
-    public MockHealthStatisticsPattern(String cartridgeType, MockScalingFactor factor, StatisticsPatternMode mode, List<Integer> sampleValues,
+    public MockHealthStatisticsPattern(String cartridgeType, MockScalingFactor factor, StatisticsPatternMode mode, List<Double> sampleValues,
                                        int sampleDuration) {
         this.cartridgeType = cartridgeType;
         this.factor = factor;
@@ -77,7 +77,7 @@ public class MockHealthStatisticsPattern {
      *
      * @return
      */
-    public int getNextSample() throws NoSampleValuesFoundException, StopStatisticsPublishingException,
+    public double getNextSample() throws NoSampleValuesFoundException, StopStatisticsPublishingException,
             ContinueLastSampleValueException {
         if ((sampleValues == null) || (sampleValues.size() < 1)) {
             throw new NoSampleValuesFoundException();
@@ -88,10 +88,11 @@ public class MockHealthStatisticsPattern {
             if (getMode() == StatisticsPatternMode.Loop) {
                 // Looping: reset the iterator
                 sampleValuesIterator = sampleValues.iterator();
-                return Integer.parseInt(sampleValuesIterator.next().toString());
+                return Double.parseDouble(sampleValuesIterator.next().toString());
             } else if (getMode() == StatisticsPatternMode.Continue) {
                 // Continue: return the last value
-                int lastSampleValue = Integer.parseInt(sampleValues.get(sampleValues.size() - 1).toString());
+                double lastSampleValue = Double.parseDouble(
+                        sampleValues.get(sampleValues.size() - 1).toString());
                 throw new ContinueLastSampleValueException(lastSampleValue);
             } else if (getMode() == StatisticsPatternMode.Stop) {
                 throw new StopStatisticsPublishingException();
@@ -99,7 +100,7 @@ public class MockHealthStatisticsPattern {
                 throw new RuntimeException("An unknown statistics pattern mode found");
             }
         } else {
-            return Integer.parseInt(sampleValuesIterator.next().toString());
+            return Double.parseDouble(sampleValuesIterator.next().toString());
         }
     }
 

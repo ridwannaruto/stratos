@@ -216,6 +216,8 @@ public class GradientFinderWindowProcessor extends WindowProcessor implements Ru
 
     @Override
     protected void init(Expression[] parameters, QueryPostProcessingElement nextProcessor, AbstractDefinition streamDefinition, String elementId, boolean async, SiddhiContext siddhiContext) {
+        log.info("\n\n!!!! Gradient Finder  window Processor created !!!!\n\n"+elementId+"  "+streamDefinition.getId()+" ");
+
         if (parameters[0] instanceof IntConstant) {
             timeToKeep = ((IntConstant) parameters[0]).getValue();
         } else {
@@ -272,5 +274,7 @@ public class GradientFinderWindowProcessor extends WindowProcessor implements Ru
     	oldEventList = null;
     	newEventList = null;
     	window = null;
+        log.info("\n\n!!!! Gradient window processor deleted !!!!\n\n");
+
     }
 }

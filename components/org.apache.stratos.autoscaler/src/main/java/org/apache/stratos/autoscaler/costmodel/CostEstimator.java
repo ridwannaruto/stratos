@@ -16,39 +16,16 @@ public class CostEstimator {
 
     public CostEstimator(String instanceType, String regionName){
         this.instanceType = new InstanceSpec(instanceType,regionName);
-        penaltyEstimator = new PenaltyEstimator(this.instanceType);
+        penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
     }
 
-    public float calculateTotalCostBasedOnRIF(PolynomialSplineFunction polynomial, int instanceCount){
-        float totalCost = 0;
+    public float calculateTotalCost(String type,float penaltyPercentage, int instanceCount){
+
         float acquisitionCost = instanceType.getPerInstanceCost() * instanceCount;
-        float penaltyCost = penaltyEstimator.calculatePenaltyCost(polynomial,instanceCount,CostModelParameters.PERF_MEASURE_TYPE_RIF);
+        float penaltyCost = penaltyEstimator.calculatePenaltyCost(penaltyPercentage,instanceCount);
 
-        totalCost = acquisitionCost + penaltyCost;
-
-        log.info("Cost estimated using RIF for " + instanceCount + " instances: " + acquisitionCost + " + " + penaltyCost);
-        return totalCost;
-    }
-
-    public float calculateTotalCostBasedOnLA(PolynomialSplineFunction polynomial, int instanceCount){
-        float totalCost = 0;
-        float acquisitionCost = instanceType.getPerInstanceCost() * instanceCount;
-        float penaltyCost = penaltyEstimator.calculatePenaltyCost(polynomial,instanceCount,CostModelParameters.PERF_MEASURE_TYPE_LA);
-
-        totalCost = acquisitionCost + penaltyCost;
-        log.info("Cost estimated using LA for " + instanceCount + " instances: " + acquisitionCost + " + " + penaltyCost);
-
-        return totalCost;
-    }
-
-
-    public float calculateTotalCostBasedOnMC(PolynomialSplineFunction polynomial, int instanceCount){
-        float totalCost = 0;
-        float acquisitionCost = instanceType.getPerInstanceCost() * instanceCount;
-        float penaltyCost = penaltyEstimator.calculatePenaltyCost(polynomial,instanceCount,CostModelParameters.PERF_MEASURE_TYPE_MC);
-
-        totalCost = acquisitionCost + penaltyCost;
-        log.info("Cost estimated using MC for " + instanceCount + " instances: " + acquisitionCost + " + " + penaltyCost);
+        float totalCost = acquisitionCost + penaltyCost;
+        log.info("Cost estimated using " + type + " for " + instanceCount + " instances: " + acquisitionCost + " + " + penaltyCost);
 
         return totalCost;
     }

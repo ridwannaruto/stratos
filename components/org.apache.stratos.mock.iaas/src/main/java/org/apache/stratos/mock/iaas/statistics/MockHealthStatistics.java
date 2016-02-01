@@ -35,10 +35,10 @@ public class MockHealthStatistics {
 
     private static volatile MockHealthStatistics instance;
 
-    private Map<String, Map<String, Integer>> statisticsMap;
+    private Map<String, Map<String, Double>> statisticsMap;
 
     private MockHealthStatistics() {
-        statisticsMap = new ConcurrentHashMap<String, Map<String, Integer>>();
+        statisticsMap = new ConcurrentHashMap<String, Map<String, Double>>();
     }
 
     public static MockHealthStatistics getInstance() {
@@ -59,12 +59,12 @@ public class MockHealthStatistics {
      * @param scalingFactor
      * @param value
      */
-    public void addStatistics(String cartridgeType, MockScalingFactor scalingFactor, Integer value) {
-        Map<String, Integer> factorValueMap = statisticsMap.get(cartridgeType);
+    public void addStatistics(String cartridgeType, MockScalingFactor scalingFactor, Double value) {
+        Map<String, Double> factorValueMap = statisticsMap.get(cartridgeType);
         if (factorValueMap == null) {
             synchronized (MockHealthStatistics.class) {
                 if (factorValueMap == null) {
-                    factorValueMap = new ConcurrentHashMap<String, Integer>();
+                    factorValueMap = new ConcurrentHashMap<String, Double>();
                     statisticsMap.put(cartridgeType, factorValueMap);
                 }
             }
@@ -79,8 +79,8 @@ public class MockHealthStatistics {
      * @param scalingFactor
      * @return
      */
-    public int getStatistics(String cartridgeType, MockScalingFactor scalingFactor) throws NoStatisticsFoundException {
-        Map<String, Integer> factorValueMap = statisticsMap.get(cartridgeType);
+    public double getStatistics(String cartridgeType, MockScalingFactor scalingFactor) throws NoStatisticsFoundException {
+        Map<String, Double> factorValueMap = statisticsMap.get(cartridgeType);
         if (factorValueMap != null) {
             if (factorValueMap.containsKey(scalingFactor.toString())) {
                 return factorValueMap.get(scalingFactor.toString());
@@ -99,7 +99,7 @@ public class MockHealthStatistics {
      * @param scalingFactor
      */
     public void removeStatistics(String cartridgeType, MockScalingFactor scalingFactor) {
-        Map<String, Integer> factorValueMap = statisticsMap.get(cartridgeType);
+        Map<String, Double> factorValueMap = statisticsMap.get(cartridgeType);
         if (factorValueMap != null) {
             if (factorValueMap.containsKey(scalingFactor.toString())) {
                 factorValueMap.remove(scalingFactor.toString());

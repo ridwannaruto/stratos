@@ -36,6 +36,7 @@ import org.apache.stratos.autoscaler.context.partition.ClusterLevelPartitionCont
 import org.apache.stratos.autoscaler.context.partition.network.NetworkPartitionContext;
 import org.apache.stratos.autoscaler.costmodel.CostModelParameters;
 import org.apache.stratos.autoscaler.costmodel.CostEstimator;
+import org.apache.stratos.autoscaler.costmodel.PenaltyEstimator;
 import org.apache.stratos.autoscaler.event.publisher.InstanceNotificationPublisher;
 import org.apache.stratos.autoscaler.monitor.cluster.ClusterMonitor;
 import org.apache.stratos.cloud.controller.stub.domain.MemberContext;
@@ -52,6 +53,7 @@ public class RuleTasksDelegator {
     private static final Log log = LogFactory.getLog(RuleTasksDelegator.class);
     private static boolean arspiIsSet = false;
     private static final float MAX_COST = 10000;
+    private static final float MIN_ALLOWED_PENALTY = 3.f;
 
 
     public double getPredictedValueForNextMinute(float average, float gradient, float secondDerivative, int timeInterval) {
@@ -81,7 +83,7 @@ public class RuleTasksDelegator {
     private double[] convertArrayListToArray(ArrayList<Double> predictedArrayList){
         double[] predictedArray = new double[predictedArrayList.size()];
         if (predictedArrayList == null){
-            for (int i=0; i<predictedArrayList.size(); i++)
+            for (int i=0; i<CostModelParameters.LIMIT_PREDICTION; i++)
                 predictedArray[i] = 0;
         }else{
             for (int i=0; i<predictedArrayList.size(); i++)
@@ -93,6 +95,7 @@ public class RuleTasksDelegator {
 
     public int getRequiredInstanceCountBasedOnLA(ArrayList<Double> predictedArrayList, int minInstanceCount, int maxInstanceCount, int activeInstanceCount, String clusterId){
         int instanceCount = 0;
+        boolean isViolated = true;
         SplineInterpolator interpolator = new SplineInterpolator();
         double[] predictedValueSet = convertArrayListToArray(predictedArrayList);
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
@@ -103,24 +106,33 @@ public class RuleTasksDelegator {
 
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
-        //String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
-        //String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
+        PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
-            float cost = priceEstimator.calculateTotalCostBasedOnLA(polynomial,i);
+            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,activeInstanceCount,CostModelParameters.PERF_MEASURE_TYPE_LA);
+            float cost = priceEstimator.calculateTotalCost("LA",penalty,i);
             if (cost < minimumCost){
                 minimumCost = cost;
                 instanceCount = i;
             }
 
+            if (penalty < MIN_ALLOWED_PENALTY){
+                isViolated = false;
+            }
+
         }
+
+        if (isViolated)
+            return maxInstanceCount;
+
         return instanceCount;
     }
 
     public int getRequiredInstanceCountBasedOnMC(ArrayList<Double> predictedArrayList, int minInstanceCount, int maxInstanceCount,int activeInstanceCount, String clusterId){
         int instanceCount = 0;
+        boolean isViolated = true;
         SplineInterpolator interpolator = new SplineInterpolator();
         double[] predictedValueSet = convertArrayListToArray(predictedArrayList);
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
@@ -129,25 +141,34 @@ public class RuleTasksDelegator {
             predictedValueSet[i] *= activeInstanceCount;
         }
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
+
         float minimumCost = MAX_COST;
-//        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
-//        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
+        PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
-            float cost = priceEstimator.calculateTotalCostBasedOnMC(polynomial,i);
+            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial, activeInstanceCount, CostModelParameters.PERF_MEASURE_TYPE_MC);
+            float cost = priceEstimator.calculateTotalCost("MC",penalty, i);
             if (cost < minimumCost){
                 minimumCost = cost;
                 instanceCount = i;
             }
 
+            if (penalty < MIN_ALLOWED_PENALTY){
+                isViolated = false;
+            }
+
         }
+
+        if (isViolated)
+            return maxInstanceCount;
         return instanceCount;
     }
 
     public int getRequiredInstanceCountBasedOnRIF(ArrayList<Double> predictedArrayList, int minInstanceCount, int maxInstanceCount, int activeInstanceCount, String clusterId){
         int instanceCount = 0;
+        boolean isViolated = true;
         SplineInterpolator interpolator = new SplineInterpolator();
         double[] predictedValueSet = convertArrayListToArray(predictedArrayList);
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
@@ -156,20 +177,28 @@ public class RuleTasksDelegator {
         }
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
         float minimumCost = MAX_COST;
-//        String instanceType = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.INSTANCE_TYPE);
-//        String regionName = getIaaSProvider(clusterId).getProperty(CloudControllerConstants.REGION_ELEMENT);
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
+        PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
-            float cost = priceEstimator.calculateTotalCostBasedOnRIF(polynomial,i);
+            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,activeInstanceCount,CostModelParameters.PERF_MEASURE_TYPE_RIF);
+            float cost = priceEstimator.calculateTotalCost("RIF",penalty, i);
+
 
             if (cost < minimumCost) {
                 minimumCost = cost;
                 instanceCount = i;
             }
 
+            if (penalty < MIN_ALLOWED_PENALTY){
+                isViolated = false;
+            }
+
         }
+
+        if(isViolated)
+            return maxInstanceCount;
         return instanceCount;
     }
 
