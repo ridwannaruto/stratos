@@ -9,6 +9,7 @@ getArimaPrediction=function(tseries,horizon) {
 getNNetPrediction=function(tseries,horizon) {
   if(length(tseries)==1)
     tseries=ts(c(tseries[1],tseries[1]-1));
+    tseries[tseries==0]=2;
 
   nnetFit=nnetar(tseries,lambda=0);
   fmodel=forecast(nnetFit,h=horizon);

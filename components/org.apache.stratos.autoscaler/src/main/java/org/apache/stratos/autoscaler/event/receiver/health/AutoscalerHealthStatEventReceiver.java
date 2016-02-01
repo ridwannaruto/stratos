@@ -509,6 +509,8 @@ public class AutoscalerHealthStatEventReceiver {
 
 
 
+
+
         healthStatEventReceiver.addEventListener(new PredictedLoadAverageEventListener(){
             @Override
             protected void onEvent(org.apache.stratos.messaging.event.Event event) {
@@ -533,6 +535,9 @@ public class AutoscalerHealthStatEventReceiver {
                 monitor.handlePredictedLoadAverageEvent(predictedLoadAverageEvent);
             }
         });
+
+
+
 
 
         healthStatEventReceiver.addEventListener(new PredictedRequestInFlightEventListener(){
@@ -560,7 +565,82 @@ public class AutoscalerHealthStatEventReceiver {
             }
         });
 
+
+
+
+
+        healthStatEventReceiver.addEventListener(new MemberPredictedLoadAverageEventListener() {
+            @Override
+            protected void onEvent(org.apache.stratos.messaging.event.Event event) {
+                MemberPredictedLoadAverageEvent memberPredictedLoadAverageEvent = (MemberPredictedLoadAverageEvent) event;
+                String memberId = memberPredictedLoadAverageEvent.getMemberId();
+                Member member = getMemberByMemberId(memberId);
+                if (null == member) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("Member not found in the Topology: [member] %s", memberId));
+                    }
+                    return;
+                }
+                if (!member.isActive()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("Member activated event has not received for the member %s. "
+                                                + "Therefore ignoring" + " the health stat", memberId));
+                    }
+                    return;
+                }
+                AutoscalerContext asCtx = AutoscalerContext.getInstance();
+                ClusterMonitor monitor;
+                String clusterId = member.getClusterId();
+                monitor = asCtx.getClusterMonitor(clusterId);
+                if (null == monitor) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("A cluster monitor is not found in autoscaler context "
+                                                + "[cluster] %s", clusterId));
+                    }
+                    return;
+                }
+                monitor.handleMemberPredictedLoadAverageEvent(memberPredictedLoadAverageEvent);
+            }
+        });
+
+
+        healthStatEventReceiver.addEventListener(new MemberPredictedMemoryConsumptionEventListener() {
+            @Override
+            protected void onEvent(org.apache.stratos.messaging.event.Event event) {
+                MemberPredictedMemoryConsumptionEvent memberPredictedMemoryConsumptionEvent = (MemberPredictedMemoryConsumptionEvent) event;
+                String memberId = memberPredictedMemoryConsumptionEvent.getMemberId();
+                Member member = getMemberByMemberId(memberId);
+                if (null == member) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("Member not found in the Topology: [member] %s", memberId));
+                    }
+                    return;
+                }
+                if (!member.isActive()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("Member activated event has not received for the member %s. "
+                                                + "Therefore ignoring" + " the health stat", memberId));
+                    }
+                    return;
+                }
+                AutoscalerContext asCtx = AutoscalerContext.getInstance();
+                ClusterMonitor monitor;
+                String clusterId = member.getClusterId();
+                monitor = asCtx.getClusterMonitor(clusterId);
+                if (null == monitor) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(String.format("A cluster monitor is not found in autoscaler context "
+                                                + "[cluster] %s", clusterId));
+                    }
+                    return;
+                }
+                monitor.handleMemberPredictedMemoryConsumptionEvent(memberPredictedMemoryConsumptionEvent);
+            }
+        });
     }
+
+
+
 
     private Member getMemberByMemberId(String memberId) {
         try {

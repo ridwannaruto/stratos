@@ -22,6 +22,8 @@ package org.apache.stratos.autoscaler.context.member;
 import org.apache.stratos.autoscaler.pojo.policy.autoscale.LoadAverage;
 import org.apache.stratos.autoscaler.pojo.policy.autoscale.MemoryConsumption;
 
+import java.util.Arrays;
+
 /**
  * This class will keep additional parameters such as load average and memory consumption
  */
@@ -108,5 +110,20 @@ public class MemberStatsContext {
 
     public void setInstanceId(String instanceId) {
         this.instanceId = instanceId;
+    }
+
+
+    public void setPredictedMemoryConsumption(double[] predictions) {
+
+
+        memoryConsumption.setPredictions(predictions);
+       //Todo : add rest of the logic of handling synchronization between Other memory updates
+    }
+
+    public void setPredictedLoadAverage(double[] predictions) {
+
+
+        loadAverage.setPredictions(predictions);
+        //Todo : add rest of the logic of handling synchronization between Other memory updates
     }
 }
