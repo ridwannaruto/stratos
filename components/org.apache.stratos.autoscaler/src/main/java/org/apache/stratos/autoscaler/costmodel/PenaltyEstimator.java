@@ -13,14 +13,12 @@ public class PenaltyEstimator {
     private static final double MANTISSA = 2.0;
     private static final double EXPONENT_FACTOR = 20.0;
 
-    public PenaltyEstimator(InstanceSpec instanceType){
-        this.instanceType = instanceType;
+    public PenaltyEstimator(String instanceType, String regionName){
+        this.instanceType = new InstanceSpec(instanceType,regionName);
     }
 
-    public float calculatePenaltyCost(PolynomialSplineFunction predictedPolynomial, int instanceCount, char type){
+    public float calculatePenaltyCost(float penaltyPercentage, int instanceCount){
         float penaltyCostPercentage = 0;
-        float penaltyPercentage = calculatePenaltyPercentage(predictedPolynomial, instanceCount,type);
-
         //Google Appengine SLA modified
         if(penaltyPercentage < 0.05){
             penaltyCostPercentage = 0;
@@ -37,7 +35,7 @@ public class PenaltyEstimator {
         return penaltyCostPercentage*instanceType.getPerInstanceCost()*instanceCount;
     }
 
-    private float calculatePenaltyPercentage(PolynomialSplineFunction predictedPolynomial, int instanceCount, char type){
+    public float calculatePenaltyPercentage(PolynomialSplineFunction predictedPolynomial, int instanceCount, char type){
         float penaltyPercentage = 0;
         float totalResourcePower = 0;
         switch (type){

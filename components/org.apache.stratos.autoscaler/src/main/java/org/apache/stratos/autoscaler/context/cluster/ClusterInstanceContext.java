@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.stratos.autoscaler.context.InstanceContext;
 import org.apache.stratos.autoscaler.context.partition.ClusterLevelPartitionContext;
+import org.apache.stratos.autoscaler.costmodel.CostModelParameters;
 import org.apache.stratos.autoscaler.pojo.policy.autoscale.LoadAverage;
 import org.apache.stratos.autoscaler.pojo.policy.autoscale.MemoryConsumption;
 import org.apache.stratos.autoscaler.pojo.policy.autoscale.RequestsInFlight;
@@ -327,7 +328,7 @@ public class ClusterInstanceContext extends InstanceContext {
     public ArrayList<Double> convertArrayToArrayList(double[] predictionArray){
         ArrayList<Double> predictionArrayList = new ArrayList<>();
         if (predictionArray == null){
-            for (int i=0; i< predictionArray.length;i++)
+            for (int i=0; i< CostModelParameters.LIMIT_PREDICTION;i++)
                 predictionArrayList.add(0.0);
         }else{
             for (int i=0; i< predictionArray.length;i++)
