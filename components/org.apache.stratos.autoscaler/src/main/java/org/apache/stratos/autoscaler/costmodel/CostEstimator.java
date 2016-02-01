@@ -19,36 +19,13 @@ public class CostEstimator {
         penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
     }
 
-    public float calculateTotalCostBasedOnRIF(float penaltyPercentage, int instanceCount){
+    public float calculateTotalCost(String type,float penaltyPercentage, int instanceCount){
 
         float acquisitionCost = instanceType.getPerInstanceCost() * instanceCount;
         float penaltyCost = penaltyEstimator.calculatePenaltyCost(penaltyPercentage,instanceCount);
 
         float totalCost = acquisitionCost + penaltyCost;
-        log.info("Cost estimated using RIF for " + instanceCount + " instances: " + acquisitionCost + " + " + penaltyCost);
-        return totalCost;
-    }
-
-    public float calculateTotalCostBasedOnLA(float penaltyPercentage, int instanceCount){
-
-        float acquisitionCost = instanceType.getPerInstanceCost() * instanceCount;
-        float penaltyCost = penaltyEstimator.calculatePenaltyCost(penaltyPercentage,instanceCount);
-
-        float totalCost = acquisitionCost + penaltyCost;
-
-        log.info("Cost estimated using LA for " + instanceCount + " instances: " + acquisitionCost + " + " + penaltyCost);
-
-        return totalCost;
-    }
-
-
-    public float calculateTotalCostBasedOnMC(float penaltyPercentage, int instanceCount){
-        float acquisitionCost = instanceType.getPerInstanceCost() * instanceCount;
-        float penaltyCost = penaltyEstimator.calculatePenaltyCost(penaltyPercentage,instanceCount);
-
-        float totalCost = acquisitionCost + penaltyCost;
-
-        log.info("Cost estimated using MC for " + instanceCount + " instances: " + acquisitionCost + " + " + penaltyCost);
+        log.info("Cost estimated using " + type + " for " + instanceCount + " instances: " + acquisitionCost + " + " + penaltyCost);
 
         return totalCost;
     }

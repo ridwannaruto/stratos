@@ -112,7 +112,7 @@ public class RuleTasksDelegator {
         PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
             float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,activeInstanceCount,CostModelParameters.PERF_MEASURE_TYPE_LA);
-            float cost = priceEstimator.calculateTotalCostBasedOnLA(penalty,i);
+            float cost = priceEstimator.calculateTotalCost("LA",penalty,i);
             if (cost < minimumCost){
                 minimumCost = cost;
                 instanceCount = i;
@@ -148,8 +148,8 @@ public class RuleTasksDelegator {
         CostEstimator priceEstimator = new CostEstimator(instanceType,regionName);
         PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
-            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,activeInstanceCount,CostModelParameters.PERF_MEASURE_TYPE_MC);
-            float cost = priceEstimator.calculateTotalCostBasedOnLA(penalty, i);
+            float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial, activeInstanceCount, CostModelParameters.PERF_MEASURE_TYPE_MC);
+            float cost = priceEstimator.calculateTotalCost("MC",penalty, i);
             if (cost < minimumCost){
                 minimumCost = cost;
                 instanceCount = i;
@@ -183,7 +183,8 @@ public class RuleTasksDelegator {
         PenaltyEstimator penaltyEstimator = new PenaltyEstimator(instanceType,regionName);
         for (int i= minInstanceCount; i<=maxInstanceCount; i++){
             float penalty = penaltyEstimator.calculatePenaltyPercentage(polynomial,activeInstanceCount,CostModelParameters.PERF_MEASURE_TYPE_RIF);
-            float cost = priceEstimator.calculateTotalCostBasedOnLA(penalty, i);
+            float cost = priceEstimator.calculateTotalCost("RIF",penalty, i);
+
 
             if (cost < minimumCost) {
                 minimumCost = cost;
