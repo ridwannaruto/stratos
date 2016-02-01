@@ -101,7 +101,7 @@ public class RuleTasksDelegator {
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
         for (int i=0; i< CostModelParameters.LIMIT_PREDICTION;i++) {
             index[i] = i + 1;
-            predictedValueSet[i] = activeInstanceCount;
+            predictedValueSet[i] *= activeInstanceCount;
         }
 
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
@@ -138,8 +138,10 @@ public class RuleTasksDelegator {
         double[] index = new double[CostModelParameters.LIMIT_PREDICTION];
         for (int i=0; i< CostModelParameters.LIMIT_PREDICTION;i++) {
             index[i] = i + 1;
+            predictedValueSet[i] *= activeInstanceCount;
         }
         PolynomialSplineFunction polynomial = interpolator.interpolate(index,predictedValueSet);
+
         float minimumCost = MAX_COST;
         String instanceType = "t2.micro";
         String regionName = "south-asia-1";
