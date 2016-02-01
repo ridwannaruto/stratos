@@ -182,16 +182,15 @@ dialect "mvel"
         int nonTerminatedMembers = clusterInstanceContext.getNonTerminatedMemberCount();
         if(scaleUp){
 
-            int clusterMaxMembers = clusterInstanceContext.getMaxInstanceCount();
-            if (nonTerminatedMembers < clusterMaxMembers) {
+            if (nonTerminatedMembers < maxInstancesCount) {
 
                 int additionalInstances = 0;
-                if(clusterMaxMembers < numberOfRequiredInstances){
+                if(maxInstancesCount < numberOfRequiredInstances){
 
-                    additionalInstances = clusterMaxMembers - nonTerminatedMembers;
+                    additionalInstances = maxInstancesCount - nonTerminatedMembers;
                     log.info("[scale-up] Required member count based on stat based scaling is higher than max, hence"
                             + " notifying to parent for possible group scaling or app bursting. [cluster] " + clusterId
-                            + " [instance id] " + clusterInstanceContext.getId() + " [max] " + clusterMaxMembers
+                            + " [instance id] " + clusterInstanceContext.getId() + " [max] " + maxInstancesCount
                             + " [number of required instances] " + numberOfRequiredInstances
                             + " [additional instances to be created] " + additionalInstances);
                     delegator.delegateScalingOverMaxNotification(clusterId, clusterInstanceContext.getNetworkPartitionId(),
@@ -209,7 +208,7 @@ dialect "mvel"
 
                     log.debug("[scale-up] Notifying dependencies [cluster] " + clusterId);
                     delegator.delegateScalingDependencyNotification(clusterId, clusterInstanceContext.getNetworkPartitionId(),
-                        clusterInstanceContext.getId(), numberOfRequiredInstances, clusterInstanceContext.getMinInstanceCount());
+                        clusterInstanceContext.getId(), numberOfRequiredInstances, minInstancesCount);
                 } else {
 
                     boolean partitionsAvailable = true;
@@ -271,7 +270,7 @@ dialect "mvel"
             } else {
                 log.info("[scale-up] Trying to scale up over max, hence not scaling up cluster itself and notifying " +
                     "to parent for possible group scaling or app bursting. [cluster] " + clusterId + " [instance id] " +
-                    clusterInstanceContext.getId() + " [max] " + clusterMaxMembers);
+                    clusterInstanceContext.getId() + " [max] " + maxInstancesCount);
                 delegator.delegateScalingOverMaxNotification(clusterId, clusterInstanceContext.getNetworkPartitionId(),
                     clusterInstanceContext.getId());
             }
@@ -284,7 +283,7 @@ dialect "mvel"
             int LOW_LOAD_KILL_TIME = 3;  // allow 3 minutes for graceful kill
             int HIGH_LOAD_KILL_TIME = 5;  // allow 5 minutes for graceful kill
 
-            if(nonTerminatedMembers > clusterInstanceContext.getMinInstanceCount){
+            if(nonTerminatedMembers > minInstancesCount){
 
                 log.debug("[scale-down] Decided to Scale down [cluster] " + clusterId);
 
@@ -298,7 +297,7 @@ dialect "mvel"
 
                         log.debug("[scale-down] Notifying dependencies [cluster] " + clusterId);
                         delegator.delegateScalingDependencyNotification(clusterId, clusterInstanceContext.getNetworkPartitionId(),
-                            clusterInstanceContext.getId(), numberOfRequiredInstances, clusterInstanceContext.getMinInstanceCount());
+                            clusterInstanceContext.getId(), numberOfRequiredInstances, minInstancesCount);
                     } else{
 
                         boolean scaleDownDueToRIF = rifReset && rifPredictedValue < rifThreshold;
@@ -359,17 +358,24 @@ dialect "mvel"
                                 }
                             }
 
-                            if (candidates.size() > 0) {
-                                String memberId = candidates.firstEntry().getValue();  // has least remaining time
-                                // ---
-                                log.debug("HealthStatProc - " + clusterId + " " + memberId + (scaleDownDueToRIF ? " rif" : "") + (scaleDownDueToMC ? " mc" : "") + (scaleDownDueToLA ? " la" : ""));
-                                // ---
-                                log.info("[scale-down] Trying to terminate an instance to scale down!" );
-                                log.debug("[scale-down]  [partition] " + partitionContext.getPartitionId() + " [cluster] " + clusterId + " Member with suitable load-cycle time combination: " + memberId);
-
-                                delegator.delegateTerminate(partitionContext, memberId);
-                            } else {
+                            if (candidates.size() == 0) {
                                 log.info("[scale-down] No suitable scale down candidates found" );
+                            } else {
+                                // min. possible no. of scale down candidates ((active - required) vs (running - minimum))
+                                int instanceDiff = Math.min(activeInstancesCount - numberOfRequiredInstances, nonTerminatedMembers - minInstancesCount);
+                                instanceDiff = Math.min(instanceDiff, candidates.size());
+                                log.info("[scale-down] Terminating " + instanceDiff + " instances");
+                                while (instanceDiff > 0) {
+                                    String memberId = candidates.pollFirstEntry().getValue();  // has least remaining time
+                                    // ---
+                                    log.debug("HealthStatProc - " + clusterId + " " + memberId + (scaleDownDueToRIF ? " rif" : "") + (scaleDownDueToMC ? " mc" : "") + (scaleDownDueToLA ? " la" : ""));
+                                    // ---
+                                    log.info("[scale-down] Trying to terminate an instance to scale down!" );
+                                    log.debug("[scale-down]  [partition] " + partitionContext.getPartitionId() + " [cluster] " + clusterId + " Member with suitable load-cycle time combination: " + memberId);
+
+                                    delegator.delegateTerminate(partitionContext, memberId);
+                                    instanceDiff--;
+                                }
                             }
                         }
                     }
