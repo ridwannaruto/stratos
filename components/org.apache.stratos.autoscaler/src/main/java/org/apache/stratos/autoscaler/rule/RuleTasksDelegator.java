@@ -81,7 +81,7 @@ public class RuleTasksDelegator {
     private double[] convertArrayListToArray(ArrayList<Double> predictedArrayList){
         double[] predictedArray = new double[predictedArrayList.size()];
         if (predictedArrayList == null){
-            for (int i=0; i<predictedArrayList.size(); i++)
+            for (int i=0; i<CostModelParameters.LIMIT_PREDICTION; i++)
                 predictedArray[i] = 0;
         }else{
             for (int i=0; i<predictedArrayList.size(); i++)
