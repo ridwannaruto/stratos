@@ -80,7 +80,6 @@ dialect "mvel"
         rifSecondDerivative : Float() from  clusterInstanceContext.getRequestsInFlightSecondDerivative()
         rifPredictedValue : Double() from delegator.getPredictedValueForNextMinute(rifAverage, rifGradient, rifSecondDerivative, 1)
 
-
         // --- LA, MC and RIF parameters from CEP
         laAverage : Float() from clusterInstanceContext.getAverageLoadAverage()
         laGradient : Float() from clusterInstanceContext.getLoadAverageGradient()
@@ -92,14 +91,10 @@ dialect "mvel"
         // ---
 
         mcThreshold : Float() from loadThresholds.getMemoryConsumptionThreshold()
-
         mcPredictedValue : Double() from delegator.getMemoryConsumptionPredictedValue(clusterInstanceContext)
 
-
         laThreshold : Float() from loadThresholds.getLoadAverageThreshold()
-
         laPredictedValue : Double() from delegator.getLoadAveragePredictedValue(clusterInstanceContext)
-
 
         activeInstancesCount : Integer() from clusterInstanceContext.getActiveMemberCount()
         maxInstancesCount : Integer() from clusterInstanceContext.getMaxInstanceCount()
@@ -131,15 +126,13 @@ dialect "mvel"
 
         */
 
-         numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getRequiredInstanceCountBasedOnRIF(clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getRequestInFlightPredictedArray()),minInstancesCount,maxInstancesCount,activeInstancesCount,clusterId)
-         numberOfInstancesReuquiredBasedOnMemoryConsumption : Integer() from delegator.getRequiredInstanceCountBasedOnMC(clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getMemoryConsumptionPredictedArray()),minInstancesCount,maxInstancesCount,activeInstancesCount,clusterId)
-         numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from delegator.getRequiredInstanceCountBasedOnLA(clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getLoadAveragePredictedArray()), minInstancesCount, maxInstancesCount,activeInstancesCount,clusterId)
+        numberOfInstancesReuquiredBasedOnRif : Integer() from delegator.getRequiredInstanceCountBasedOnRIF(clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getRequestInFlightPredictedArray()),minInstancesCount,maxInstancesCount,activeInstancesCount,clusterId)
+        numberOfInstancesReuquiredBasedOnMemoryConsumption : Integer() from delegator.getRequiredInstanceCountBasedOnMC(clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getMemoryConsumptionPredictedArray()),minInstancesCount,maxInstancesCount,activeInstancesCount,clusterId)
+        numberOfInstancesReuquiredBasedOnLoadAverage : Integer() from delegator.getRequiredInstanceCountBasedOnLA(clusterInstanceContext.convertArrayToArrayList(clusterInstanceContext.getLoadAveragePredictedArray()), minInstancesCount, maxInstancesCount,activeInstancesCount,clusterId)
 
-
-
-                numberOfRequiredInstances : Integer() from delegator.getMaxNumberOfInstancesRequired(
-                    numberOfInstancesReuquiredBasedOnRif, numberOfInstancesReuquiredBasedOnMemoryConsumption, mcReset,
-                    numberOfInstancesReuquiredBasedOnLoadAverage, laReset)
+        numberOfRequiredInstances : Integer() from delegator.getMaxNumberOfInstancesRequired(
+            numberOfInstancesReuquiredBasedOnRif, numberOfInstancesReuquiredBasedOnMemoryConsumption, mcReset,
+            numberOfInstancesReuquiredBasedOnLoadAverage, laReset)
 
         scaleUp : Boolean() from (activeInstancesCount < numberOfRequiredInstances)
         scaleDown : Boolean() from (activeInstancesCount > numberOfRequiredInstances || (numberOfRequiredInstances == 1 && activeInstancesCount == 1))
@@ -176,7 +169,7 @@ dialect "mvel"
         }
         // ---
 
-          log.debug("[scaling] Number of required instances based on stats: " + numberOfRequiredInstances + " " +
+        log.debug("[scaling] Number of required instances based on stats: " + numberOfRequiredInstances + " " +
             "[active instances count] " + activeInstancesCount + " [network-partition] " +
             clusterInstanceContext.getNetworkPartitionId() + " [cluster] " + clusterId);
 
@@ -232,9 +225,9 @@ dialect "mvel"
                         log.warn("Scaling decision publisher is not enabled");
                     }
 
-                        boolean scaleUpDueToRIF = rifReset && rifPredictedValue > rifThreshold;
-                        boolean scaleUpDueToMC = mcReset && mcPredictedValue > mcThreshold;
-                        boolean scaleUpDueToLA = laReset && laPredictedValue > laThreshold;
+                    boolean scaleUpDueToRIF = rifReset && numberOfInstancesReuquiredBasedOnRif > activeInstancesCount;
+                    boolean scaleUpDueToMC = mcReset && numberOfInstancesReuquiredBasedOnMemoryConsumption > activeInstancesCount;
+                    boolean scaleUpDueToLA = laReset && numberOfInstancesReuquiredBasedOnLoadAverage > activeInstancesCount;
 
                     while(count != additionalInstances && partitionsAvailable){
 
